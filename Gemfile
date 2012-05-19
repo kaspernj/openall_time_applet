@@ -6,6 +6,7 @@ gem "knjrbfw"
 gem "gtk2"
 gem "sqlite3"
 gem "gettext"
+gem "json"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
