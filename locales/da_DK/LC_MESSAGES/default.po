@@ -1,0 +1,66 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Openall_time_applet\n"
+"POT-Creation-Date: 2012-05-18 20:38+0100\n"
+"PO-Revision-Date: 2012-05-18 20:38+0100\n"
+"Last-Translator: Kasper Johansen <k@spernj.org>\n"
+"Language-Team: Kasper Johansen <k@spernj.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-Basepath: ../../../\n"
+"X-Poedit-Language: Danish\n"
+"X-Poedit-Country: DENMARK\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: gui/trayicon.rb:11
+msgid "New timelog"
+msgstr "Ny tidslog"
+
+#: gui/trayicon.rb:15
+msgid "Overview"
+msgstr "Oversigt"
+
+#: glade/win_timelog_edit.glade:7
+msgid "Timelog"
+msgstr "Tidslog"
+
+#: glade/win_timelog_edit.glade:39
+msgid "Description"
+msgstr "Beskrivelse"
+
+#: glade/win_timelog_edit.glade:51
+msgid "Time"
+msgstr "Tid"
+
+#: glade/win_timelog_edit.glade:100
+msgid "<b>Timelog</b>"
+msgstr "<b>Tidslog</b>"
+
+#: glade/win_preferences.glade:7
+msgid "Preferences"
+msgstr "Indstillinger"
+
+#: glade/win_preferences.glade:43
+msgid "URL"
+msgstr "URL"
+
+#: glade/win_preferences.glade:54
+msgid "Username"
+msgstr "Brugernavn"
+
+#: glade/win_preferences.glade:100
+msgid "Password"
+msgstr "Adagngskode"
+
+#: glade/win_preferences.glade:142
+msgid "<b>OpenAll</b>"
+msgstr "<b>OpenAll</b>"
+
+#: glade/win_overview.glade:52
+msgid "<b>Timelogs</b>"
+msgstr "<b>Tidslogs</b>"
+
