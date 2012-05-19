@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.authors = ["Kasper Johansen"]
   s.date = %q{2012-05-19}
   s.default_executable = %q{openall_time_applet.rb}
-  s.description = %q{TODO: longer description of your gem}
+  s.description = %q{Off-line time-tracking for OpenAll with syncing when online.}
   s.email = %q{k@spernj.org}
   s.executables = ["openall_time_applet.rb"]
   s.extra_rdoc_files = [
@@ -42,6 +42,7 @@ Gem::Specification.new do |s|
     "locales/da_DK/LC_MESSAGES/default.mo",
     "locales/da_DK/LC_MESSAGES/default.po",
     "models/timelog.rb",
+    "openall_time_applet.gemspec",
     "spec/openall_time_applet_spec.rb",
     "spec/spec_helper.rb"
   ]
@@ -49,7 +50,7 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.6.2}
-  s.summary = %q{TODO: one-line summary of your gem}
+  s.summary = %q{Time-tracking for OpenAll.}
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
