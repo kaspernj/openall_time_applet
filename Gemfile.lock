@@ -51,6 +51,7 @@ DEPENDENCIES
   gettext
   gtk2
   jeweler (~> 1.8.3)
+  json
   knjrbfw
   rcov
   rdoc (~> 3.12)
