@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "openall_time_applet"
   gem.homepage = "http://github.com/kaspernj/openall_time_applet"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Time-tracking for OpenAll.}
+  gem.description = %Q{Off-line time-tracking for OpenAll with syncing when online.}
   gem.email = "k@spernj.org"
   gem.authors = ["Kasper Johansen"]
   # dependencies defined in Gemfile
