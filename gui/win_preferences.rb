@@ -13,6 +13,7 @@ class Openall_time_applet::Gui::Win_preferences
     @gui["window"].show_all
   end
   
+  #Loads values from database into widgets.
   def load_values
     @gui["txtHost"].text = Knj::Opts.get("openall_host")
     @gui["txtPort"].text = Knj::Opts.get("openall_port")
@@ -26,6 +27,7 @@ class Openall_time_applet::Gui::Win_preferences
     end
   end
   
+  #Saves values from widgets into database.
   def on_btnSave_clicked
     Knj::Opts.set("openall_host", @gui["txtHost"].text)
     Knj::Opts.set("openall_port", @gui["txtPort"].text)
@@ -35,12 +37,15 @@ class Openall_time_applet::Gui::Win_preferences
     @gui["window"].destroy
   end
   
+  #Tries to connect to OpenAll with the given information and receive a task-list as well to validate information and connectivity.
   def on_btnTest_clicked
     ws = Knj::Gtk2::StatusWindow.new("transient_for" => @gui["window"])
     ws.label = _("Connecting and logging in...")
     
+    #Do the stuff in thread so GUI wont lock.
     Knj::Thread.new do
       begin
+        #Connect to OpenAll, log in, get a list of tasks to test the information and connection.
         @args[:oata].oa_conn do |conn|
           ws.percent = 0.3
           ws.label = _("Getting task-list.")
@@ -50,12 +55,19 @@ class Openall_time_applet::Gui::Win_preferences
           ws.percent = 1
         end
       rescue => e
-        raise e
-        Knj::Gtk2.msgbox(e.message, "warning", _("Error"))
+        #Show error for user if error occurrs.
+        Knj::Gtk2.msgbox(
+          "msg" => Knj::Errors.error_str(e),
+          "type" => "warning",
+          "title" => _("Error"),
+          "run" => false,
+          "transient_for" => @gui["window"]
+        )
       ensure
+        #Be sure that the status-window will be closed.
         Knj::Thread.new do
           sleep 1.5
-          ws.destroy
+          ws.destroy if ws
         end
       end
     end

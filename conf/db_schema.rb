@@ -7,10 +7,21 @@ Openall_time_applet::DB_SCHEMA = {
         {"name" => "value", "type" => "text"}
       ]
     },
+    "Task" => {
+      "columns" => [
+        {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
+        {"name" => "openall_uid", "type" => "int"},
+        {"name" => "title", "type" => "varchar"}
+      ],
+      "indexes" => [
+        "openall_uid"
+      ]
+    },
     "Timelog" => {
       "columns" => [
         {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
         {"name" => "openall_uid", "type" => "int"},
+        {"name" => "task_id", "type" => "int"},
         {"name" => "time", "type" => "int"},
         {"name" => "time_transport", "type" => "int"},
         {"name" => "descr", "type" => "text"},
@@ -18,7 +29,8 @@ Openall_time_applet::DB_SCHEMA = {
         {"name" => "sync_last", "type" => "datetime"}
       ],
       "indexes" => [
-        "openall_uid"
+        "openall_uid",
+        "task_id"
       ]
     }
   }
