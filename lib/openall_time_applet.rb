@@ -146,9 +146,18 @@ class Openall_time_applet
     Openall_time_applet::Gui::Win_overview.new(:oata => self)
   end
   
+  def show_worktime_overview
+    Openall_time_applet::Gui::Win_worktime_overview.new(:oata => self)
+  end
+  
   #Updates the task-cache.
   def update_task_cache
     @ob.static(:Task, :update_cache, {:oata => self})
+  end
+  
+  #Updates the worktime-cache.
+  def update_worktime_cache
+    @ob.static(:Worktime, :update_cache, {:oata => self})
   end
   
   #Pushes time-updates to OpenAll.
@@ -169,12 +178,16 @@ class Openall_time_applet
       begin
         sw.label = _("Updating task-cache.")
         self.update_task_cache
+        sw.percent = 0.3
         
-        sw.percent = 0.5
+        sw.label = _("Updating worktime-cache.")
+        self.update_worktime_cache
+        sw.percent = 0.66
+        
         sw.label = _("Pushing time-updates.")
         self.push_time_updates
-        
         sw.percent = 1
+        
         sw.label = _("Done")
         
         sleep 1

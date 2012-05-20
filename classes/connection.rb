@@ -40,8 +40,14 @@ class Openall_time_applet::Connection
       res = @http.get(args[:url])
     end
     
+    raise _("Empty body returned from OpenAll.") if res.body.to_s.strip.length <= 0
+    
     #Parse result as JSON.
-    parsed = JSON.parse(res.body)
+    begin
+      parsed = JSON.parse(res.body)
+    rescue
+      raise sprintf(_("Could not parse JSON from: %s"), res.body)
+    end
     
     #An error occurred in OpenAll. Make it look like an error here as well.
     if parsed.is_a?(Hash) and parsed["type"] == "error"

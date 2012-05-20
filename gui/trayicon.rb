@@ -19,6 +19,10 @@ class Openall_time_applet::Gui::Trayicon
     overview.label = _("Overview")
     overview.signal_connect("activate", &self.method(:on_overview_activate))
     
+    worktime_overview = Gtk::ImageMenuItem.new(Gtk::Stock::HOME)
+    worktime_overview.label = _("Time overview")
+    worktime_overview.signal_connect("activate", &self.method(:on_worktimeOverview_activate))
+    
     pref = Gtk::ImageMenuItem.new(Gtk::Stock::PREFERENCES)
     pref.signal_connect("activate", &self.method(:on_preferences_activate))
     
@@ -32,6 +36,7 @@ class Openall_time_applet::Gui::Trayicon
     menu = Gtk::Menu.new
     menu.append(timelog_new)
     menu.append(overview)
+    menu.append(worktime_overview)
     menu.append(Gtk::SeparatorMenuItem.new)
     menu.append(pref)
     menu.append(Gtk::SeparatorMenuItem.new)
@@ -39,16 +44,18 @@ class Openall_time_applet::Gui::Trayicon
     #Make a list of all timelogs in the menu.
     @args[:oata].ob.list(:Timelog, {"orderby" => "id"}) do |timelog|
       label = sprintf(_("Track: %s"), timelog.descr_short)
-      mi = Gtk::MenuItem.new(label)
       
       #If this is the active timelog, make the label bold, by getting the label-child and using HTML-markup on it.
       if @args[:oata].timelog_active and @args[:oata].timelog_active.id == timelog.id
+        mi = Gtk::ImageMenuItem.new(Gtk::Stock::MEDIA_RECORD)
         mi.children[0].markup = "<b>#{label}</b>"
-      end
-      
-      #Change the active timelog, when the timelog is clicked.
-      mi.signal_connect("activate") do
-        @args[:oata].timelog_active = timelog
+        mi.signal_connect("activate", &self.method(:on_stopTracking_activate))
+      else
+        mi = Gtk::MenuItem.new(label)
+        #Change the active timelog, when the timelog is clicked.
+        mi.signal_connect("activate") do
+          @args[:oata].timelog_active = timelog
+        end
       end
       
       menu.append(mi)
@@ -56,12 +63,6 @@ class Openall_time_applet::Gui::Trayicon
     
     if @args[:oata].timelog_active
       menu.append(Gtk::SeparatorMenuItem.new)
-      
-      #Item for stopping the tracking of the active timelog.
-      mi = Gtk::ImageMenuItem.new(Gtk::Stock::STOP)
-      mi.label = _("Stop tracking")
-      mi.signal_connect("activate", &self.method(:on_stopTracking_activate))
-      menu.append(mi)
       
       #If tracking is active, then show how many seconds has been tracked until now in menu as an item.
       secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i
@@ -87,6 +88,10 @@ class Openall_time_applet::Gui::Trayicon
   
   def on_overview_activate(*args)
     @args[:oata].show_overview
+  end
+  
+  def on_worktimeOverview_activate(*args)
+    @args[:oata].show_worktime_overview
   end
   
   def on_quit_activate(*args)
