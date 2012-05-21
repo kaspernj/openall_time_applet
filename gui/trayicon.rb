@@ -1,3 +1,4 @@
+#This class controls the behaviour around the trayicon.
 class Openall_time_applet::Gui::Trayicon
   attr_reader :args
   
@@ -5,8 +6,77 @@ class Openall_time_applet::Gui::Trayicon
     @args = args
     
     @ti = Gtk::StatusIcon.new
-    @ti.file = "../gfx/icon_time.png"
     @ti.signal_connect("popup-menu", &self.method(:on_statusicon_rightclick))
+    self.update_icon
+    
+    #Start icon-updater-thread.
+    self.icon_updater
+  end
+  
+  #This methods starts the thread that updates the tray-icon.
+  def icon_updater
+    Knj::Thread.new do
+      loop do
+        self.update_icon
+        sleep 60
+      end
+    end
+  end
+  
+  #This updates the icon in the system-tray. It draws seconds on the icon, if a timelog is being tracked.
+  def update_icon
+    if !@args[:oata].timelog_active
+      @ti.file = "../gfx/icon_time.png"
+      return nil
+    end
+    
+    #Calculate minutes tracked and generate variables.
+    secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i
+    mins = (secs.to_f / 60.0)
+    mins = 1 if mins < 1
+    
+    if mins >= 60
+      hours = mins / 60
+      text = "#{Knj::Locales.number_out(hours, 1)}t"
+    else
+      text = "#{Knj::Locales.number_out(mins, 0)}m"
+    end
+    
+    if text.length <= 2
+      padding_left = 9
+    elsif text.length <= 3
+      padding_left = 4
+    elsif text.length <= 4
+      padding_left = 2
+    else
+      padding_left = 0
+    end
+    
+    #Generate image.
+    require "RMagick"
+    canvas = Magick::Image.new(53, 48){
+      self.background_color = "transparent"
+      self.format = "png"
+    }
+    
+    color = Knj::Opts.get("tray_text_color")
+    color = "black" if color.to_s.strip.length <= 0
+    
+    gc = Magick::Draw.new
+    gc.fill(color)
+    gc.pointsize = 23
+    gc.text(padding_left, 35, text)
+    gc.draw(canvas)
+    
+    tmp_path = "#{Knj::Os.tmpdir}/openall_time_applet_icon.png"
+    canvas.write(tmp_path)
+    canvas.destroy!
+    
+    #Set icon for tray.
+    @ti.file = tmp_path
+    
+    
+    return nil
   end
   
   def on_statusicon_rightclick(tray, button, time)

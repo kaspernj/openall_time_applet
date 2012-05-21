@@ -59,6 +59,7 @@ class Openall_time_applet
   
   #Various readable variables.
   attr_reader :db, :ob, :timelog_active, :timelog_active_time
+  attr_accessor :reminder_next
   
   #Config controlling paths and more.
   CONFIG = {
@@ -95,12 +96,41 @@ class Openall_time_applet
     
     #Set crash-operation to save tracked time instead of loosing it.
     Kernel.at_exit(&self.method(:destroy))
+    
+    #Start reminder.
+    self.reminding
   end
   
   #Updates the database according to the db-schema.
   def update_db
     require "../conf/db_schema.rb"
     Knj::Db::Revision.new.init_db("db" => @db, "schema" => Openall_time_applet::DB_SCHEMA)
+  end
+  
+  #This method starts the reminder-thread, that checks if a reminder should be shown.
+  def reminding
+    Knj::Thread.new do
+      loop do
+        enabled = Knj::Strings.yn_str(Knj::Opts.get("reminder_enabled"), true, false)
+        if enabled and !@reminder_next
+          @reminder_next = Knj::Datet.new
+          @reminder_next.mins + Knj::Opts.get("reminder_every_minute").to_i
+        elsif enabled and @reminder_next and Time.now >= @reminder_next
+          self.reminding_exec
+          @reminder_next = nil
+        end
+        
+        sleep 30
+      end
+    end
+    
+    return nil
+  end
+  
+  #This executes the notification that notifies if a timelog is being tracked.
+  def reminding_exec
+    return nil unless @timelog_active
+    Knj::Notify.send("time" => 5, "msg" => sprintf(_("Tracking task: %s"), @timelog_active[:descr]))
   end
   
   #Creates a connection to OpenAll, logs in, yields the connection and destroys it again.
@@ -220,6 +250,7 @@ class Openall_time_applet
     
     @timelog_active = nil
     @timelog_active_time = nil
+    @ti.update_icon if @ti
   end
   
   #Sets a new timelog to track. Stops tracking of previous timelog if already tracking.
@@ -228,6 +259,7 @@ class Openall_time_applet
     
     @timelog_active = timelog
     @timelog_active_time = Time.new
+    @ti.update_icon if @ti
   end
   
   #Saves tracking-status if tracking. Stops Gtks main loop.

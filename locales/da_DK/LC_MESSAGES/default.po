@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Openall_time_applet\n"
-"POT-Creation-Date: 2012-05-21 11:58+0100\n"
-"PO-Revision-Date: 2012-05-21 12:02+0100\n"
+"POT-Creation-Date: 2012-05-21 13:20+0100\n"
+"PO-Revision-Date: 2012-05-21 13:20+0100\n"
 "Last-Translator: Kasper Johansen <k@spernj.org>\n"
 "Language-Team: Kasper Johansen <k@spernj.org>\n"
 "Language: \n"
@@ -27,6 +27,34 @@ msgstr "Tom body returneret fra OpenAll."
 #: classes/connection.rb:49
 msgid "Could not parse JSON from: %s"
 msgstr "Kunne ikke oversætte JSON fra: %s"
+
+#: classes/translations.rb:4
+msgid "Monday"
+msgstr "Mandag"
+
+#: classes/translations.rb:5
+msgid "Thuesday"
+msgstr "Tirsday"
+
+#: classes/translations.rb:6
+msgid "Wednesday"
+msgstr "Onsdag"
+
+#: classes/translations.rb:7
+msgid "Thursday"
+msgstr "Torsday"
+
+#: classes/translations.rb:8
+msgid "Friday"
+msgstr "Freday"
+
+#: classes/translations.rb:9
+msgid "Saturday"
+msgstr "Lørday"
+
+#: classes/translations.rb:10
+msgid "Sunday"
+msgstr "Søndag"
 
 #: gui/trayicon.rb:15
 msgid "New timelog"

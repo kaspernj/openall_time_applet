@@ -31,7 +31,7 @@ class Openall_time_applet::Gui::Win_timelog_edit
   def on_btnSave_clicked(*args)
     #Generate task-ID based on widget-value.
     task = @gui["cbTask"].sel
-    if task
+    if task.respond_to?(:is_knj?)
       task_id = task.id
     else
       task_id = 0
