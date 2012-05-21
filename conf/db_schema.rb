@@ -7,14 +7,26 @@ Openall_time_applet::DB_SCHEMA = {
         {"name" => "value", "type" => "text"}
       ]
     },
+    "Organisation" => {
+      "columns" => [
+        {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
+        {"name" => "openall_uid", "type" => "int"},
+        {"name" => "name", "type" => "varchar"}
+      ],
+      "indexes" => [
+        "openall_uid"
+      ]
+    },
     "Task" => {
       "columns" => [
         {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
         {"name" => "openall_uid", "type" => "int"},
+        {"name" => "organisation_id", "type" => "int"},
         {"name" => "title", "type" => "varchar"}
       ],
       "indexes" => [
-        "openall_uid"
+        "openall_uid",
+        "organisation_id",
       ]
     },
     "Timelog" => {

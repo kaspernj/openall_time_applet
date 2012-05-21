@@ -1,6 +1,6 @@
 require "rubygems"
 
-if ENV["HOME"] == "/home/kaspernj"
+if ENV["HOME"] == "/home/kaspernj" and File.exists?("/home/kaspernj/Dev/Ruby/knjrbfw")
   #For development.
   require "/home/kaspernj/Dev/Ruby/knjrbfw/lib/knjrbfw"
 else
@@ -160,6 +160,10 @@ class Openall_time_applet
     @ob.static(:Worktime, :update_cache, {:oata => self})
   end
   
+  def update_organisation_cache
+    @ob.static(:Organisation, :update_cache, {:oata => self})
+  end
+  
   #Pushes time-updates to OpenAll.
   def push_time_updates
     @ob.static(:Timelog, :push_time_updates, {:oata => self})
@@ -176,16 +180,20 @@ class Openall_time_applet
     
     Knj::Thread.new do
       begin
+        sw.label = _("Updating organisation-cache.")
+        self.update_organisation_cache
+        sw.percent = 0.25
+        
         sw.label = _("Updating task-cache.")
         self.update_task_cache
-        sw.percent = 0.3
-        
-        sw.label = _("Updating worktime-cache.")
-        self.update_worktime_cache
-        sw.percent = 0.66
+        sw.percent = 0.5
         
         sw.label = _("Pushing time-updates.")
         self.push_time_updates
+        sw.percent = 0.75
+        
+        sw.label = _("Updating worktime-cache.")
+        self.update_worktime_cache
         sw.percent = 1
         
         sw.label = _("Done")

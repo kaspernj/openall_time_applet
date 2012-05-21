@@ -1,4 +1,8 @@
 class Openall_time_applet::Models::Task < Knj::Datarow
+  has_one [
+    :Organisation
+  ]
+  
   has_many [
     [:Timelog, :task_id, :timelogs]
   ]
@@ -11,15 +15,18 @@ class Openall_time_applet::Models::Task < Knj::Datarow
     
     res.each do |task_data|
       task = self.ob.get_by(:Task, {"openall_uid" => task_data["uid"]})
-      task_data = {
+      data_hash = {
         :openall_uid => task_data["uid"],
         :title => task_data["title"]
       }
       
+      org = self.ob.get_by(:Organisation, {"openall_uid" => task_data["organisation_uid"]})
+      data_hash[:organisation_id] = org.id if org
+      
       if task
-        task.update(task_data)
+        task.update(data_hash)
       else
-        task = self.ob.add(:Task, task_data)
+        task = self.ob.add(:Task, data_hash)
       end
     end
   end
