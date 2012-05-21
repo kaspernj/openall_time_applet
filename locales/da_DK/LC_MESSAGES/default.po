@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Openall_time_applet\n"
-"POT-Creation-Date: 2012-05-18 20:38+0100\n"
-"PO-Revision-Date: 2012-05-18 20:38+0100\n"
+"POT-Creation-Date: 2012-05-21 11:58+0100\n"
+"PO-Revision-Date: 2012-05-21 12:02+0100\n"
 "Last-Translator: Kasper Johansen <k@spernj.org>\n"
 "Language-Team: Kasper Johansen <k@spernj.org>\n"
 "Language: \n"
@@ -16,27 +16,160 @@ msgstr ""
 "X-Poedit-SourceCharset: utf-8\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: gui/trayicon.rb:11
+#: classes/connection.rb:26
+msgid "Could not log in."
+msgstr "Kunne ikke logge ind."
+
+#: classes/connection.rb:43
+msgid "Empty body returned from OpenAll."
+msgstr "Tom body returneret fra OpenAll."
+
+#: classes/connection.rb:49
+msgid "Could not parse JSON from: %s"
+msgstr "Kunne ikke oversætte JSON fra: %s"
+
+#: gui/trayicon.rb:15
 msgid "New timelog"
 msgstr "Ny tidslog"
 
-#: gui/trayicon.rb:15
+#: gui/trayicon.rb:19
 msgid "Overview"
 msgstr "Oversigt"
+
+#: gui/trayicon.rb:23
+msgid "Time overview"
+msgstr "Tids oversigt"
+
+#: gui/trayicon.rb:33
+msgid "Synchronize with OpenAll"
+msgstr "Synkroniserer med OpenAll"
+
+#: gui/trayicon.rb:46
+msgid "Track: %s"
+msgstr "Følg: %s"
+
+#: gui/trayicon.rb:69
+msgid "%s seconds"
+msgstr "%s sekunder"
+
+#: gui/win_overview.rb:11
+msgid "ID"
+msgstr "ID"
+
+#: gui/win_overview.rb:11
+msgid "Description"
+msgstr "Beskrivelse"
+
+#: gui/win_overview.rb:11
+msgid "Time"
+msgstr "Tid"
+
+#: gui/win_overview.rb:11
+msgid "Transport"
+msgstr "Transport"
+
+#: gui/win_overview.rb:11
+msgid "Needs sync"
+msgstr "Behøver sync"
+
+#: gui/win_overview.rb:11
+msgid "Task"
+msgstr "Opgave"
+
+#: gui/win_overview.rb:29
+msgid "Yes"
+msgstr "Ja"
+
+#: gui/win_overview.rb:29
+msgid "No"
+msgstr "Nej"
+
+#: gui/win_preferences.rb:43
+msgid "Connecting and logging in..."
+msgstr "Forbinder og logger ind..."
+
+#: gui/win_preferences.rb:51
+msgid "Getting task-list."
+msgstr "Henter opgave-liste."
+
+#: gui/win_preferences.rb:54
+msgid "Got %s tasks."
+msgstr "Hentet %s opgaver."
+
+#: gui/win_preferences.rb:62
+#: lib/openall_time_applet.rb:203
+msgid "Error"
+msgstr "Fejl"
+
+#: gui/win_worktime_overview.rb:24
+msgid "Week %s"
+msgstr "Uge %s"
+
+#: gui/win_worktime_overview.rb:103
+msgid "No worktimes was found that week."
+msgstr "Der blev ikke fundet nogle arbejdstimer i denne uge."
+
+#: gui/win_timelog_edit.rb:11
+msgid "None"
+msgstr "Ingen"
+
+#: gui/win_timelog_edit.rb:47
+msgid "You have entered an invalid time-format."
+msgstr "Du har indtastet et ugyldigt tids-format."
+
+#: gui/win_timelog_edit.rb:58
+msgid "You have entered an invalid transport-time-format."
+msgstr "Du har indtastet et ugyldigt transport-tids-format."
+
+#: gui/win_timelog_edit.rb:88
+msgid "Do you want to remove this timelog? This will not delete the timelog on OpenAll."
+msgstr "Vil du fjerne denne tidslogning? Dette vil ikke slette tidslogningen fra OpenAll."
+
+#: lib/openall_time_applet.rb:90
+msgid "not set"
+msgstr "ikke sat"
+
+#: lib/openall_time_applet.rb:183
+msgid "Updating organisation-cache."
+msgstr "Opdaterer organisations-cache."
+
+#: lib/openall_time_applet.rb:187
+msgid "Updating task-cache."
+msgstr "Opdaterer opgave-cache."
+
+#: lib/openall_time_applet.rb:191
+msgid "Pushing time-updates."
+msgstr "Sender tids-opdateringer."
+
+#: lib/openall_time_applet.rb:195
+msgid "Updating worktime-cache."
+msgstr "Opdaterer arbejdstids-cache."
+
+#: lib/openall_time_applet.rb:199
+msgid "Done"
+msgstr "Færdig"
+
+#: glade/win_worktime_overview.glade:7
+msgid "Week status"
+msgstr "Uge status"
+
+#: glade/win_worktime_overview.glade:51
+msgid "Week"
+msgstr "Uge"
 
 #: glade/win_timelog_edit.glade:7
 msgid "Timelog"
 msgstr "Tidslog"
 
-#: glade/win_timelog_edit.glade:39
-msgid "Description"
-msgstr "Beskrivelse"
+#: glade/win_timelog_edit.glade:150
+msgid "Should sync"
+msgstr "Skal synces"
 
-#: glade/win_timelog_edit.glade:51
-msgid "Time"
-msgstr "Tid"
+#: glade/win_timelog_edit.glade:167
+msgid "Start tracking after saving"
+msgstr "Starter med at følge efter gem"
 
-#: glade/win_timelog_edit.glade:100
+#: glade/win_timelog_edit.glade:188
 msgid "<b>Timelog</b>"
 msgstr "<b>Tidslog</b>"
 
@@ -44,23 +177,37 @@ msgstr "<b>Tidslog</b>"
 msgid "Preferences"
 msgstr "Indstillinger"
 
-#: glade/win_preferences.glade:43
-msgid "URL"
-msgstr "URL"
+#: glade/win_preferences.glade:42
+msgid "Host"
+msgstr "Host"
 
-#: glade/win_preferences.glade:54
+#: glade/win_preferences.glade:53
 msgid "Username"
 msgstr "Brugernavn"
 
-#: glade/win_preferences.glade:100
+#: glade/win_preferences.glade:99
 msgid "Password"
 msgstr "Adagngskode"
 
-#: glade/win_preferences.glade:142
+#: glade/win_preferences.glade:130
+msgid "Port"
+msgstr "Port"
+
+#: glade/win_preferences.glade:158
+msgid "SSL"
+msgstr "SSL"
+
+#: glade/win_preferences.glade:187
 msgid "<b>OpenAll</b>"
 msgstr "<b>OpenAll</b>"
 
-#: glade/win_overview.glade:52
+#: glade/win_preferences.glade:206
+msgid "Test"
+msgstr "Test"
+
+#: glade/win_overview.glade:54
 msgid "<b>Timelogs</b>"
 msgstr "<b>Tidslogs</b>"
 
+#~ msgid "URL"
+#~ msgstr "URL"
