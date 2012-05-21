@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{openall_time_applet}
-  s.version = "0.0.1"
+  s.version = "0.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
-  s.date = %q{2012-05-19}
+  s.date = %q{2012-05-21}
   s.default_executable = %q{openall_time_applet.rb}
   s.description = %q{Off-line time-tracking for OpenAll with syncing when online.}
   s.email = %q{k@spernj.org}
@@ -34,14 +34,18 @@ Gem::Specification.new do |s|
     "glade/win_overview.glade",
     "glade/win_preferences.glade",
     "glade/win_timelog_edit.glade",
+    "glade/win_worktime_overview.glade",
     "gui/trayicon.rb",
     "gui/win_overview.rb",
     "gui/win_preferences.rb",
     "gui/win_timelog_edit.rb",
+    "gui/win_worktime_overview.rb",
     "lib/openall_time_applet.rb",
     "locales/da_DK/LC_MESSAGES/default.mo",
     "locales/da_DK/LC_MESSAGES/default.po",
+    "models/task.rb",
     "models/timelog.rb",
+    "models/worktime.rb",
     "openall_time_applet.gemspec",
     "spec/openall_time_applet_spec.rb",
     "spec/spec_helper.rb"
