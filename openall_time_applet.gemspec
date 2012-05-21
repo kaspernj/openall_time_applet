@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{openall_time_applet}
-  s.version = "0.0.2"
+  s.version = "0.0.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
@@ -43,6 +43,7 @@ Gem::Specification.new do |s|
     "lib/openall_time_applet.rb",
     "locales/da_DK/LC_MESSAGES/default.mo",
     "locales/da_DK/LC_MESSAGES/default.po",
+    "models/organisation.rb",
     "models/task.rb",
     "models/timelog.rb",
     "models/worktime.rb",
