@@ -33,6 +33,7 @@ GEM
     rcov (0.9.11)
     rdoc (3.12)
       json (~> 1.4)
+    rmagick (2.13.1)
     rspec (2.8.0)
       rspec-core (~> 2.8.0)
       rspec-expectations (~> 2.8.0)
@@ -55,5 +56,6 @@ DEPENDENCIES
   knjrbfw
   rcov
   rdoc (~> 3.12)
+  rmagick
   rspec (~> 2.8.0)
   sqlite3
