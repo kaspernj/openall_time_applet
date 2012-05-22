@@ -58,7 +58,7 @@ class Openall_time_applet
   end
   
   #Various readable variables.
-  attr_reader :db, :ob, :timelog_active, :timelog_active_time
+  attr_reader :db, :ob, :ti, :timelog_active, :timelog_active_time
   attr_accessor :reminder_next
   
   #Config controlling paths and more.
@@ -79,6 +79,9 @@ class Openall_time_applet
       :index_append_table_name => true
     )
     
+    #Update to latest db-revision.
+    self.update_db
+    
     #Models-handeler.
     @ob = Knj::Objects.new(
       :datarow => true,
@@ -96,6 +99,9 @@ class Openall_time_applet
     
     #Set crash-operation to save tracked time instead of loosing it.
     Kernel.at_exit(&self.method(:destroy))
+    
+    #Spawn tray-icon.
+    self.spawn_trayicon
     
     #Start reminder.
     self.reminding

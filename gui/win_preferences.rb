@@ -60,6 +60,7 @@ class Openall_time_applet::Gui::Win_preferences
   def on_btnTraySave_clicked
     color_key = @tray_colors.keys[@gui["cbTrayTextColor"].sel["active"]]
     Knj::Opts.set("tray_text_color", color_key)
+    @args[:oata].ti.update_icon if @args[:oata].ti
     Knj::Gtk2.msgbox(_("The tray-settings was saved."), "info")
   end
   
