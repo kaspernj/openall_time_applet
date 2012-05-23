@@ -39,9 +39,6 @@ Openall_time_applet::DB_SCHEMA = {
         {"name" => "sync_need", "type" => "enum", "maxlength" => "'0','1'", "default" => 0},
         {"name" => "sync_last", "type" => "datetime"}
       ],
-      "columns_remove" => {
-        "openall_uid" => true
-      },
       "indexes" => [
         "task_id"
       ]

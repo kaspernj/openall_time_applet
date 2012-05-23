@@ -9,8 +9,7 @@ class Openall_time_applet::Connection
       :port => @args[:port],
       :follow_redirects => false,
       :ssl => Knj::Strings.yn_str(@args[:ssl], true, false),
-      :debug => false,
-      :encoding_gzip => false
+      :debug => false
     )
     
     self.login
