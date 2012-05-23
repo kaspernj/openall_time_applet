@@ -33,7 +33,6 @@ class Openall_time_applet::Gui::Trayicon
     #Calculate minutes tracked and generate variables.
     secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i
     mins = (secs.to_f / 60.0)
-    mins = 1 if mins < 1
     
     if mins >= 60
       hours = mins / 60
@@ -136,7 +135,8 @@ class Openall_time_applet::Gui::Trayicon
       
       #If tracking is active, then show how many seconds has been tracked until now in menu as an item.
       secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i
-      label = Gtk::MenuItem.new(sprintf(_("%s seconds"), secs))
+      mins = (secs.to_f / 60.0).round(0)
+      label = Gtk::MenuItem.new(sprintf(_("%s minutes"), mins))
       menu.append(label)
     end
     

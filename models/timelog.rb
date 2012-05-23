@@ -18,26 +18,17 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
         next if secs_sum <= 0
         
         #The timelog has not yet been created in OpenAll - create it!
-        if timelog[:openall_uid].to_i == 0
-          res = conn.request(
-            :method => :createWorktime,
-            :post => {
-              :task_uid => timelog.task[:openall_uid].to_i,
-              :comment => timelog[:descr]
-            }
-          )
-          timelog[:openall_uid] = res["worktime_uid"]
-        end
-        
-        #Push latest work-time.
         res = conn.request(
-          :method => :pushTimeToWorktime,
+          :method => :createWorktime,
           :post => {
-            :worktime_uid => timelog[:openall_uid].to_i,
-            :secs => timelog[:time].to_i,
-            :secs_transport => timelog[:time_transport].to_i
+            :task_uid => timelog.task[:openall_uid].to_i,
+            :comment => timelog[:descr],
+            :worktime => Knj::Strings.secs_to_human_time_str(timelog[:time]),
+            :transporttime => Knj::Strings.secs_to_human_time_str(timelog[:time_transport])
           }
         )
+        
+        #Reset timelog.
         timelog.update(
           :time => 0,
           :time_transport => 0,

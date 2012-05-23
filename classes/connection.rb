@@ -21,14 +21,11 @@ class Openall_time_applet::Connection
     @http.post_multipart("index.php?c=Auth&m=validateLogin", {"username" => @args[:username], "password" => @args[:password]})
     
     #Verify login by reading dashboard HTML.
-    @http.reconnect
     res = @http.get("index.php?c=Dashboard")
     raise _("Could not log in.") if !res.body.match(/<ul id="webticker" >/)
   end
   
   def request(args)
-    @http.reconnect
-    
     #Possible to give a string instead of hash to do it simple.
     args = {:url => "?c=Jsonapi&m=#{args}"} if args.is_a?(String) or args.is_a?(Symbol)
     args[:url] = "?c=Jsonapi&m=#{args[:method]}" if args[:method] and !args[:url]

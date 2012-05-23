@@ -32,7 +32,6 @@ Openall_time_applet::DB_SCHEMA = {
     "Timelog" => {
       "columns" => [
         {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
-        {"name" => "openall_uid", "type" => "int"},
         {"name" => "task_id", "type" => "int"},
         {"name" => "time", "type" => "int"},
         {"name" => "time_transport", "type" => "int"},
@@ -40,8 +39,10 @@ Openall_time_applet::DB_SCHEMA = {
         {"name" => "sync_need", "type" => "enum", "maxlength" => "'0','1'", "default" => 0},
         {"name" => "sync_last", "type" => "datetime"}
       ],
+      "columns_remove" => {
+        "openall_uid" => true
+      },
       "indexes" => [
-        "openall_uid",
         "task_id"
       ]
     },
