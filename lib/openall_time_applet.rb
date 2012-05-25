@@ -1,5 +1,7 @@
+#Support for libs loaded through RubyGems.
 require "rubygems"
 
+#For secs-to-human-string (MySQL-format), model-framework, database-framework, options-framework, date-framework and more.
 if ENV["HOME"] == "/home/kaspernj" and File.exists?("/home/kaspernj/Dev/Ruby/knjrbfw")
   #For development.
   require "/home/kaspernj/Dev/Ruby/knjrbfw/lib/knjrbfw"
@@ -12,11 +14,19 @@ require "sqlite3"
 require "gettext"
 require "base64"
 
+#For msgbox and translation of windows.
 require "knj/gtk2"
+
+#For easy initialization, getting and settings of values on comboboxes.
 require "knj/gtk2_cb"
+
+#For easy initialization, getting and settings of values on treeviews.
 require "knj/gtk2_tv"
+
+#For easy making status-windows with progressbar.
 require "knj/gtk2_statuswindow"
 
+#The base class of the applet. Spawns all windows, holds subclasses for models and gui, holds models objects and holds database-objects.
 class Openall_time_applet
   #Shortcut to start the application. Used by the Ubuntu-package.
   def self.exec
@@ -205,8 +215,13 @@ class Openall_time_applet
     @ob.static(:Timelog, :push_time_updates, {:oata => self})
   end
   
-  #Refreshes task-cache, create missing worktime from timelogs and push tracked time to timelogs. Shows a status-window while doing so.
+  #Shows the sync overview, which must be seen before the actual sync.
   def sync
+    Openall_time_applet::Gui::Win_sync_overview.new(:oata => self)
+  end
+  
+  #Refreshes task-cache, create missing worktime from timelogs and push tracked time to timelogs. Shows a status-window while doing so.
+  def sync_real
     sw = Knj::Gtk2::StatusWindow.new
     
     if @timelog_active
@@ -238,7 +253,7 @@ class Openall_time_applet
       rescue => e
         Knj::Gtk2.msgbox("msg" => Knj::Errors.error_str(e), "type" => "warning", "title" => _("Error"), "run" => false)
       ensure
-        sw.destroy
+        sw.destroy if sw
         self.timelog_active = timelog_active if timelog_active
       end
     end

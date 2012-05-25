@@ -53,7 +53,7 @@ class Openall_time_applet::Gui::Trayicon
     
     #Generate image.
     require "RMagick"
-    canvas = Magick::Image.new(53, 48){
+    canvas = Magick::Image.new(53, 53){
       self.background_color = "transparent"
       self.format = "png"
     }
