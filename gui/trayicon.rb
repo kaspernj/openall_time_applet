@@ -99,8 +99,12 @@ class Openall_time_applet::Gui::Trayicon
     quit.signal_connect("activate", &self.method(:on_quit_activate))
     
     sync = Gtk::ImageMenuItem.new(Gtk::Stock::HARDDISK)
-    sync.label = _("Synchronize with OpenAll")
+    sync.label = _("Push timelogs")
     sync.signal_connect("activate", &self.method(:on_sync_activate))
+    
+    sync_static = Gtk::ImageMenuItem.new(Gtk::Stock::HARDDISK)
+    sync_static.label = _("Synchronize tasks, worktime and more")
+    sync_static.signal_connect("activate", &self.method(:on_syncStatic_activate))
     
     menu = Gtk::Menu.new
     menu.append(timelog_new)
@@ -142,6 +146,7 @@ class Openall_time_applet::Gui::Trayicon
     
     menu.append(Gtk::SeparatorMenuItem.new)
     menu.append(sync)
+    menu.append(sync_static)
     menu.append(quit)
     menu.show_all
     
@@ -170,6 +175,10 @@ class Openall_time_applet::Gui::Trayicon
   
   def on_sync_activate(*args)
     @args[:oata].sync
+  end
+  
+  def on_syncStatic_activate(*args)
+    @args[:oata].sync_static
   end
   
   def on_stopTracking_activate(*args)

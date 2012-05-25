@@ -120,7 +120,7 @@ class Openall_time_applet
   #Updates the database according to the db-schema.
   def update_db
     require "../conf/db_schema.rb"
-    Knj::Db::Revision.new.init_db("db" => @db, "schema" => Openall_time_applet::DB_SCHEMA)
+    Knj::Db::Revision.new.init_db("debug" => false, "db" => @db, "schema" => Openall_time_applet::DB_SCHEMA)
   end
   
   #This method starts the reminder-thread, that checks if a reminder should be shown.
@@ -215,6 +215,33 @@ class Openall_time_applet
     @ob.static(:Timelog, :push_time_updates, {:oata => self})
   end
   
+  #Synchronizes organisations, tasks and worktimes.
+  def sync_static
+    sw = Knj::Gtk2::StatusWindow.new
+    
+    Knj::Thread.new do
+      begin
+        sw.label = _("Updating organisation-cache.")
+        self.update_organisation_cache
+        sw.percent = 0.33
+        
+        sw.label = _("Updating task-cache.")
+        self.update_task_cache
+        sw.percent = 0.66
+        
+        sw.label = _("Updating worktime-cache.")
+        self.update_worktime_cache
+        sw.percent = 1
+        
+        sleep 1
+      rescue => e
+        Knj::Gtk2.msgbox("msg" => Knj::Errors.error_str(e), "type" => "warning", "title" => _("Error"), "run" => false)
+      ensure
+        sw.destroy if sw
+      end
+    end
+  end
+  
   #Shows the sync overview, which must be seen before the actual sync.
   def sync
     Openall_time_applet::Gui::Win_sync_overview.new(:oata => self)
@@ -231,17 +258,9 @@ class Openall_time_applet
     
     Knj::Thread.new do
       begin
-        sw.label = _("Updating organisation-cache.")
-        self.update_organisation_cache
-        sw.percent = 0.25
-        
-        sw.label = _("Updating task-cache.")
-        self.update_task_cache
-        sw.percent = 0.5
-        
         sw.label = _("Pushing time-updates.")
         self.push_time_updates
-        sw.percent = 0.75
+        sw.percent = 0.5
         
         sw.label = _("Updating worktime-cache.")
         self.update_worktime_cache
