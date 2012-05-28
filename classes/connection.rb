@@ -8,7 +8,7 @@ class Openall_time_applet::Connection
       :host => @args[:host],
       :port => @args[:port],
       :follow_redirects => false,
-      :ssl => Knj::Strings.yn_str(@args[:ssl], true, false),
+      :ssl => @args[:ssl],
       :debug => false
     )
     

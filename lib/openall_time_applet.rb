@@ -161,7 +161,8 @@ class Openall_time_applet
         :host => Knj::Opts.get("openall_host"),
         :port => Knj::Opts.get("openall_port"),
         :username => Knj::Opts.get("openall_username"),
-        :password => Base64.strict_decode64(Knj::Opts.get("openall_password"))
+        :password => Base64.strict_decode64(Knj::Opts.get("openall_password")),
+        :ssl => Knj::Strings.yn_str(Knj::Opts.get("openall_ssl"), true, false)
       )
       yield(conn)
     ensure
