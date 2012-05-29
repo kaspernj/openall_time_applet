@@ -110,6 +110,9 @@ class Openall_time_applet
     #Set crash-operation to save tracked time instead of loosing it.
     Kernel.at_exit(&self.method(:destroy))
     
+    #Set default-color to "green_casalogic".
+    Knj::Opts.set("tray_text_color", "green_casalogic") if Knj::Opts.get("tray_text_color").to_s.strip.length <= 0
+    
     #Spawn tray-icon.
     self.spawn_trayicon
     
