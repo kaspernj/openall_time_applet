@@ -25,8 +25,11 @@ class Openall_time_applet::Gui::Trayicon
   
   #This updates the icon in the system-tray. It draws seconds on the icon, if a timelog is being tracked.
   def update_icon
+    color = Knj::Opts.get("tray_text_color")
+    color = "black" if color.to_s.strip.length <= 0
+    
     if !@args[:oata].timelog_active
-      @ti.file = "../gfx/icon_time.png"
+      @ti.file = "../gfx/icon_time_#{color}.png"
       return nil
     end
     
@@ -58,8 +61,7 @@ class Openall_time_applet::Gui::Trayicon
       self.format = "png"
     }
     
-    color = Knj::Opts.get("tray_text_color")
-    color = "black" if color.to_s.strip.length <= 0
+    color = "#a1a80a" if color == "green_casalogic"
     
     gc = Magick::Draw.new
     gc.fill(color)

@@ -27,7 +27,7 @@ class Openall_time_applet::Gui::Win_preferences
     @gui["txtReminderEveryMinute"].text = Knj::Opts.get("reminder_every_minute")
     
     #Tray settings.
-    @tray_colors = {"black" => _("Black"), "white" => _("White")}
+    @tray_colors = {"black" => _("Black"), "green_casalogic" => _("Green (Casalogic)"), "white" => _("White")}
     @gui["cbTrayTextColor"].init(@tray_colors.values)
     @gui["cbTrayTextColor"].sel = @tray_colors[Knj::Opts.get("tray_text_color")] if Knj::Opts.get("tray_text_color").to_s.strip.length > 0
   end
