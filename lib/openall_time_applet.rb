@@ -181,23 +181,33 @@ class Openall_time_applet
   
   #Spawns the preference-window.
   def show_preferences
-    Openall_time_applet::Gui::Win_preferences.new(:oata => self)
+    Knj::Gtk2::Window.unique!("preferences") do
+      Openall_time_applet::Gui::Win_preferences.new(:oata => self)
+    end
   end
   
   def show_timelog_new
-    Openall_time_applet::Gui::Win_timelog_edit.new(:oata => self)
+    Knj::Gtk2::Window.unique!("timelog_new") do
+      Openall_time_applet::Gui::Win_timelog_edit.new(:oata => self)
+    end
   end
   
   def show_timelog_edit(timelog)
-    Openall_time_applet::Gui::Win_timelog_edit.new(:oata => self, :timelog => timelog)
+    Knj::Gtk2::Window.unique!("timelog_edit_#{timelog.id}") do
+      Openall_time_applet::Gui::Win_timelog_edit.new(:oata => self, :timelog => timelog)
+    end
   end
   
   def show_overview
-    Openall_time_applet::Gui::Win_overview.new(:oata => self)
+    Knj::Gtk2::Window.unique!("overview") do
+      Openall_time_applet::Gui::Win_overview.new(:oata => self)
+    end
   end
   
   def show_worktime_overview
-    Openall_time_applet::Gui::Win_worktime_overview.new(:oata => self)
+    Knj::Gtk2::Window.unique!("worktime_overview") do
+      Openall_time_applet::Gui::Win_worktime_overview.new(:oata => self)
+    end
   end
   
   #Updates the task-cache.

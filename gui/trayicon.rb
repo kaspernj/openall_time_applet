@@ -7,6 +7,7 @@ class Openall_time_applet::Gui::Trayicon
     
     @ti = Gtk::StatusIcon.new
     @ti.signal_connect("popup-menu", &self.method(:on_statusicon_rightclick))
+    @ti.signal_connect("activate", &self.method(:on_statusicon_rightclick))
     self.update_icon
     
     #Start icon-updater-thread.
@@ -80,7 +81,9 @@ class Openall_time_applet::Gui::Trayicon
     return nil
   end
   
-  def on_statusicon_rightclick(tray, button, time)
+  def on_statusicon_rightclick(*args)
+    tray, button, time = *args
+    
     #Build rightclick-menu for tray-icon.
     timelog_new = Gtk::ImageMenuItem.new(Gtk::Stock::NEW)
     timelog_new.label = _("New timelog")
@@ -150,9 +153,11 @@ class Openall_time_applet::Gui::Trayicon
     menu.append(sync)
     menu.append(sync_static)
     menu.append(quit)
+    
     menu.show_all
     
-    menu.popup(nil, nil, button, time)
+    event = Gdk::EventButton.new(Gdk::Event::BUTTON_PRESS)
+    menu.popup(nil, nil, event.button, event.time)
   end
   
   def on_preferences_activate(*args)

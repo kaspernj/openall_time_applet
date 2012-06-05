@@ -1,4 +1,7 @@
 class Openall_time_applet::Gui::Win_worktime_overview
+  #For Knj::Gtk2::Window#unique!
+  attr_reader :gui
+  
   def initialize(args)
     @args = args
     
