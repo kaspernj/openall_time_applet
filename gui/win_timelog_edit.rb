@@ -11,6 +11,42 @@ class Openall_time_applet::Gui::Win_timelog_edit
     tasks_opts = [_("None")] + @args[:oata].ob.list(:Task, {"orderby" => "openall_uid"})
     @gui["cbTask"].init(tasks_opts)
     
+    Knj::Gtk2::Cb.init(
+      "cb" => @gui["cbTimeType"],
+      "items" => {
+        "normal" => _("Normal"),
+        "overtime150" => sprintf(_("Overtime %s"), 150),
+        "overtime200" => sprintf(_("Overtime %s"), 200)
+      }
+    )
+    
+    
+    #Set up completion for description entry.
+    ec = Gtk::EntryCompletion.new
+    ec.model = Gtk::ListStore.new(String)
+    ec.text_column = 0
+    @gui["txtDescr"].completion = ec
+    
+    added = {}
+    @args[:oata].ob.list(:Worktime, {"orderby" => "timestamp"}) do |worktime|
+      next if added.key?(worktime[:comment])
+      added[worktime[:comment]] = true
+      ec.model.append[0] = worktime[:comment]
+    end
+    
+    @args[:oata].ob.list(:Timelog, {"orderby" => "descr"}) do |timelog|
+      next if added.key?(timelog[:descr])
+      added[timelog[:descr]] = true
+      ec.model.append[0] = timelog[:descr]
+    end
+    
+    ec.signal_connect("match-selected") do |me, model, iter|
+      text = model.get_value(iter, 0)
+      me.entry.text = text
+      true
+    end
+    
+    
     #We are editting a timelog - set widget-values.
     @timelog = @args[:timelog]
     
@@ -18,14 +54,22 @@ class Openall_time_applet::Gui::Win_timelog_edit
       @gui["txtDescr"].text = @timelog[:descr]
       @gui["txtTime"].text = @timelog.time_as_human
       @gui["txtTimeTransport"].text = @timelog.time_transport_as_human
+      @gui["txtTransportLength"].text = Knj::Locales.number_out(@timelog[:transportlength], 0)
+      @gui["txtTransportCosts"].text = Knj::Locales.number_out(@timelog[:transportcosts], 0)
+      @gui["txtTransportDescr"].text = @timelog[:transportdescription]
       @gui["cbTask"].sel = @timelog.task if @timelog.task
       @gui["cbShouldSync"].active = Knj::Strings.yn_str(@timelog[:sync_need], true, false)
+      @gui["cbTravelFixed"].active = Knj::Strings.yn_str(@timelog[:travelfixed], true, false)
+      @gui["cbWorkInternal"].active = Knj::Strings.yn_str(@timelog[:workinternal], true, false)
+      @gui["cbTimeType"].sel = @timelog[:timetype]
+      @gui["txtTimestamp"].text = Knj::Datet.in(@timelog[:timestamp]).out
     else
       @gui["btnRemove"].visible = false
+      @gui["txtTimestamp"].text = Knj::Datet.new.out
     end
     
     #Show the window.
-    @gui["window"].show_all
+    @gui["window"].show
   end
   
   def on_btnSave_clicked(*args)
@@ -60,13 +104,27 @@ class Openall_time_applet::Gui::Win_timelog_edit
       end
     end
     
+    begin
+      timestamp_dbstr = Knj::Datet.in(@gui["txtTimestamp"].text).dbstr
+    rescue
+      Knj::Gtk2.msgbox(_("You have entered an invalid timestamp."))
+      return nil
+    end
+    
     #Generate hash for updating dataabase.
     save_hash = {
       :descr => @gui["txtDescr"].text,
+      :timestamp => timestamp_dbstr,
       :time => time_secs,
+      :timetype => @gui["cbTimeType"].sel,
       :time_transport => time_transport_secs,
+      :transportdescription => @gui["txtTransportDescr"].text,
+      :transportlength => Knj::Locales.number_in(@gui["txtTransportLength"].text),
+      :transportcosts => Knj::Locales.number_in(@gui["txtTransportCosts"].text),
       :task_id => task_id,
-      :sync_need => Knj::Strings.yn_str(@gui["cbShouldSync"].active?, 1, 0)
+      :sync_need => Knj::Strings.yn_str(@gui["cbShouldSync"].active?, 1, 0),
+      :workinternal => Knj::Strings.yn_str(@gui["cbWorkInternal"].active?, 1, 0),
+      :travelfixed => Knj::Strings.yn_str(@gui["cbTravelFixed"].active?, 1, 0)
     }
     
     #Update or add the timelog.

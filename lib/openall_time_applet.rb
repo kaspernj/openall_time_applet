@@ -264,11 +264,7 @@ class Openall_time_applet
   #Refreshes task-cache, create missing worktime from timelogs and push tracked time to timelogs. Shows a status-window while doing so.
   def sync_real
     sw = Knj::Gtk2::StatusWindow.new
-    
-    if @timelog_active
-      timelog_active = @timelog_active
-      self.timelog_stop_tracking
-    end
+    self.timelog_stop_tracking if @timelog_active
     
     Knj::Thread.new do
       begin
@@ -287,7 +283,6 @@ class Openall_time_applet
         Knj::Gtk2.msgbox("msg" => Knj::Errors.error_str(e), "type" => "warning", "title" => _("Error"), "run" => false)
       ensure
         sw.destroy if sw
-        self.timelog_active = timelog_active if timelog_active
       end
     end
   end

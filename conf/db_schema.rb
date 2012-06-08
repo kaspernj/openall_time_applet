@@ -33,8 +33,15 @@ Openall_time_applet::DB_SCHEMA = {
       "columns" => [
         {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
         {"name" => "task_id", "type" => "int"},
+        {"name" => "timestamp", "type" => "datetime"},
         {"name" => "time", "type" => "int"},
+        {"name" => "timetype", "type" => "enum", "maxlength" => "'normal','overtime150','overtime200'", "default" => "normal"},
         {"name" => "time_transport", "type" => "int"},
+        {"name" => "transportlength", "type" => "int"},
+        {"name" => "transportdescription", "type" => "text"},
+        {"name" => "transportcosts", "type" => "int"},
+        {"name" => "travelfixed", "type" => "enum", "maxlength" => "'0','1'", "default" => 0},
+        {"name" => "workinternal", "type" => "enum", "maxlength" => "'0','1'", "default" => 0},
         {"name" => "descr", "type" => "text"},
         {"name" => "sync_need", "type" => "enum", "maxlength" => "'0','1'", "default" => 0},
         {"name" => "sync_last", "type" => "datetime"}

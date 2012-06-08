@@ -7,7 +7,7 @@ class Openall_time_applet::Gui::Trayicon
     
     @ti = Gtk::StatusIcon.new
     @ti.signal_connect("popup-menu", &self.method(:on_statusicon_rightclick))
-    @ti.signal_connect("activate", &self.method(:on_statusicon_rightclick))
+    @ti.signal_connect("activate", &self.method(:on_statusicon_leftclick))
     self.update_icon
     
     #Start icon-updater-thread.
@@ -81,20 +81,18 @@ class Openall_time_applet::Gui::Trayicon
     return nil
   end
   
-  def on_statusicon_rightclick(*args)
-    tray, button, time = *args
-    
+  def on_statusicon_rightclick(tray, button, time)
     #Build rightclick-menu for tray-icon.
     timelog_new = Gtk::ImageMenuItem.new(Gtk::Stock::NEW)
     timelog_new.label = _("New timelog")
     timelog_new.signal_connect("activate", &self.method(:on_timelogNew_activate))
     
     overview = Gtk::ImageMenuItem.new(Gtk::Stock::EDIT)
-    overview.label = _("Overview")
+    overview.label = _("Timelog list")
     overview.signal_connect("activate", &self.method(:on_overview_activate))
     
     worktime_overview = Gtk::ImageMenuItem.new(Gtk::Stock::HOME)
-    worktime_overview.label = _("Time overview")
+    worktime_overview.label = _("Week view")
     worktime_overview.signal_connect("activate", &self.method(:on_worktimeOverview_activate))
     
     pref = Gtk::ImageMenuItem.new(Gtk::Stock::PREFERENCES)
@@ -104,12 +102,8 @@ class Openall_time_applet::Gui::Trayicon
     quit.signal_connect("activate", &self.method(:on_quit_activate))
     
     sync = Gtk::ImageMenuItem.new(Gtk::Stock::HARDDISK)
-    sync.label = _("Push timelogs")
+    sync.label = _("Synchronize with OpenAll")
     sync.signal_connect("activate", &self.method(:on_sync_activate))
-    
-    sync_static = Gtk::ImageMenuItem.new(Gtk::Stock::HARDDISK)
-    sync_static.label = _("Synchronize tasks, worktime and more")
-    sync_static.signal_connect("activate", &self.method(:on_syncStatic_activate))
     
     menu = Gtk::Menu.new
     menu.append(timelog_new)
@@ -117,7 +111,11 @@ class Openall_time_applet::Gui::Trayicon
     menu.append(worktime_overview)
     menu.append(Gtk::SeparatorMenuItem.new)
     menu.append(pref)
-    menu.append(Gtk::SeparatorMenuItem.new)
+    
+    
+    #Only add seperator if more than one timelog.
+    timelog_count = @args[:oata].ob.list(:Timelog, {"count" => true})
+    menu.append(Gtk::SeparatorMenuItem.new) if timelog_count > 0
     
     #Make a list of all timelogs in the menu.
     @args[:oata].ob.list(:Timelog, {"orderby" => "id"}) do |timelog|
@@ -151,13 +149,16 @@ class Openall_time_applet::Gui::Trayicon
     
     menu.append(Gtk::SeparatorMenuItem.new)
     menu.append(sync)
-    menu.append(sync_static)
     menu.append(quit)
-    
     menu.show_all
     
-    event = Gdk::EventButton.new(Gdk::Event::BUTTON_PRESS)
-    menu.popup(nil, nil, event.button, event.time)
+    menu.popup(nil, nil, button, time) do |menu, x, y|
+      @ti.position_menu(menu)
+    end
+  end
+  
+  def on_statusicon_leftclick(*args)
+    @args[:oata].show_timelog_new
   end
   
   def on_preferences_activate(*args)
@@ -177,15 +178,29 @@ class Openall_time_applet::Gui::Trayicon
   end
   
   def on_quit_activate(*args)
-    @args[:oata].destroy
+    #Check if a timelog needs to be synced. If so the user needs to confirm he really wants to quit.
+    timelog_found = nil
+    do_destroy = true
+    
+    @args[:oata].ob.list(:Timelog) do |timelog|
+      if timelog[:time].to_f > 0 or timelog[:time_transport].to_f > 0 or timelog[:sync_need].to_i == 1
+        timelog_found = timelog
+        break
+      end
+    end
+    
+    if timelog_found
+      if Knj::Gtk2.msgbox(sprintf(_("The timelog '%s' has not been synced. Are you sure you want to quit?"), timelog_found[:descr]), "yesno") != "yes"
+        do_destroy = false
+      end
+    end
+    
+    @args[:oata].destroy if do_destroy
   end
   
   def on_sync_activate(*args)
-    @args[:oata].sync
-  end
-  
-  def on_syncStatic_activate(*args)
     @args[:oata].sync_static
+    @args[:oata].sync
   end
   
   def on_stopTracking_activate(*args)

@@ -3,6 +3,14 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
     :Task
   ]
   
+  def initialize(*args, &block)
+    super(*args, &block)
+    
+    #Fix default time-type (SQLite3 doesnt support this).
+    self[:timetype] = "normal" if self[:timetype].to_s == ""
+    self[:timestamp] = Knj::Datet.new.dbstr if self[:timestamp].to_s == ""
+  end
+  
   #Treat data before inserting into database.
   def self.add(d)
     d.data[:time] = 0 if d.data[:time].to_s.strip.length <= 0
@@ -24,17 +32,19 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
             :task_uid => timelog.task[:openall_uid].to_i,
             :comment => timelog[:descr],
             :worktime => Knj::Strings.secs_to_human_time_str(timelog[:time]),
-            :transporttime => Knj::Strings.secs_to_human_time_str(timelog[:time_transport])
+            :workinternal => timelog[:workinternal],
+            :timestamp => timelog[:timestamp],
+            :timetype => timelog[:timetype],
+            :transporttime => Knj::Strings.secs_to_human_time_str(timelog[:time_transport]),
+            :transportlength => timelog[:transportlength].to_i,
+            :transportcosts => timelog[:transportcosts].to_i,
+            :transportdescription => timelog[:transportdescription],
+            :travelfixed => timelog[:travelfixed]
           }
         )
         
-        #Reset timelog.
-        timelog.update(
-          :time => 0,
-          :time_transport => 0,
-          :sync_need => 0,
-          :sync_last => Time.now
-        )
+        #Delete timelog.
+        d.ob.delete(timelog)
       end
     end
   end
