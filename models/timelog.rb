@@ -57,6 +57,14 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
     return descr
   end
   
+  #Returns a short one-line short description.
+  def transport_descr_short
+    descr = self[:transportdescription].to_s.gsub("\n", " ").gsub(/\s{2,}/, " ")
+    descr = Knj::Strings.shorten(descr, 20)
+    descr = "[#{_("no description")}]" if descr.to_s.strip.length <= 0
+    return descr
+  end
+  
   #Returns the time as a human readable format.
   def time_as_human
     return Knj::Strings.secs_to_human_time_str(self[:time])

@@ -15,115 +15,74 @@ class Openall_time_applet::Gui::Win_overview
     iter[0] = _("None")
     iter[1] = 0.to_s
     
-    task_ls_to_id = []
-    
     @args[:oata].ob.list(:Task, {"orderby" => "title"}) do |task|
       iter = task_ls.append
       iter[0] = task[:title]
       iter[1] = task.id.to_s
-      task_ls_to_id << task.id
     end
     
     init_data = @gui["tvTimelogs"].init([
       _("ID"),
       _("Description"),
+      _("Timestamp"),
       _("Time"),
       _("Transport"),
+      _("Length"),
+      _("Transport descr."),
+      _("Transport costs"),
       {
-        :title => _("Needs sync"),
+        :title => _("Fixed travel"),
+        :type => :toggle
+      },
+      {
+        :title => _("Int. work"),
+        :type => :toggle
+      },
+      {
+        :title => _("Sync?"),
         :type => :toggle
       },
       {
         :title => _("Task"),
         :type => :combo,
-        :model => task_ls
+        :model => task_ls,
+        :has_entry => false
       }
     ])
     
-    
-    #Set description to be editable.
-    init_data[:renderers][1].editable = true
-    init_data[:renderers][1].signal_connect("edited") do |renderer, row, var|
-      sel = @gui["tvTimelogs"].sel
-      timelog = @args[:oata].ob.get(:Timelog, sel[0])
-      
-      begin
-        timelog[:descr] = var
-      rescue => e
-        Knj::Gtk2.msgbox(e.message, "warning")
-      end
-    end
-    
-    #Set time to be editable.
-    init_data[:renderers][2].editable = true
-    init_data[:renderers][2].signal_connect("edited") do |renderer, row, var|
-      sel = @gui["tvTimelogs"].sel
-      timelog = @args[:oata].ob.get(:Timelog, sel[0])
-      
-      begin
-        time_secs = Knj::Strings.human_time_str_to_secs(var)
-      rescue
-        Knj::Gtk2.msgbox(_("Invalid time entered."))
-        return nil
-      end
-      
-      begin
-        timelog[:time] = time_secs
-      rescue => e
-        Knj::Gtk2.msgbox(e.message, "warning")
-      end
-    end
-    
-    #Set transport to be editable.
-    init_data[:renderers][3].editable = true
-    init_data[:renderers][3].signal_connect("edited") do |renderer, row, var|
-      sel = @gui["tvTimelogs"].sel
-      timelog = @args[:oata].ob.get(:Timelog, sel[0])
-      
-      begin
-        time_secs = Knj::Strings.human_time_str_to_secs(var)
-      rescue
-        Knj::Gtk2.msgbox(_("Invalid time entered."))
-        return nil
-      end
-      
-      begin
-        timelog[:time_transport] = time_secs
-      rescue => e
-        Knj::Gtk2.msgbox(e.message, "warning")
-      end
-    end
-    
-    #Set sync flag to be activateable.
-    init_data[:renderers][4].activatable = true
-    init_data[:renderers][4].signal_connect("toggled") do |renderer, path, val|
-      iter = @gui["tvTimelogs"].model.get_iter(path)
-      id = @gui["tvTimelogs"].model.get_value(iter, 0)
-      timelog = @args[:oata].ob.get(:Timelog, id)
-      
-      if timelog[:sync_need].to_i == 1
-        timelog[:sync_need] = 0
-      else
-        timelog[:sync_need] = 1
-      end
-    end
-    
-    #Make task select-able.
-    init_data[:renderers][5].editable = true
-    init_data[:renderers][5].has_entry = false
-    init_data[:renderers][5].signal_connect("edited") do |renderer, row_no, val|
-      iter = @gui["tvTimelogs"].model.get_iter(row_no)
-      id = @gui["tvTimelogs"].model.get_value(iter, 0) 
-      timelog = @args[:oata].ob.get(:Timelog, id)
-      
-      task = @args[:oata].ob.get_by(:Task, {"title" => val})
-      if !task
-        timelog[:task_id] = 0
-      else
-        timelog[:task_id] = task.id
-      end
-    end
-    
+    Knj::Gtk2::Tv.editable_text_renderers_to_model(
+      :ob => @args[:oata].ob,
+      :tv => @gui["tvTimelogs"],
+      :model_class => :Timelog,
+      :renderers => init_data[:renderers],
+      :change_before => proc{ @dont_reload = true },
+      :change_after => proc{ @dont_reload = false },
+      :cols => {
+        1 => :descr,
+        2 => {:col => :timestamp, :type => :datetime},
+        3 => {:col => :time, :type => :time_as_sec},
+        4 => {:col => :time_transport, :type => :time_as_sec},
+        5 => {:col => :transportlength, :type => :int},
+        6 => {:col => :transportdescription},
+        7 => {:col => :transportcosts, :type => :human_number, :decimals => 2},
+        8 => {:col => :travelfixed},
+        9 => {:col => :workinternal},
+        10 => {:col => :sync_need},
+        11 => {
+          :col => :task_id,
+          :value_callback => lambda{ |data|
+            task = @args[:oata].ob.get_by(:Task, {"title" => data[:value]})
+            
+            if !task
+              return 0
+            else
+              return task.id
+            end
+          },
+          :value_set_callback => proc{ |data| data[:model].task_name }
+        }
+      }
+    )
     
     @gui["tvTimelogs"].columns[0].visible = false
     self.reload_timelogs
@@ -134,19 +93,30 @@ class Openall_time_applet::Gui::Win_overview
     @gui["window"].show_all
   end
   
-  def on_cell_edited(*args)
-    print "Cell edit!\n"
-    Knj::Php.print_r(args)
+  def dont_reload
+    @dont_reload = true
+    begin
+      yield
+    ensure
+      @dont_reload = false
+    end
   end
   
   def reload_timelogs
+    return nil if @dont_reload
     @gui["tvTimelogs"].model.clear
     @args[:oata].ob.list(:Timelog, {"orderby" => "id"}) do |timelog|
       @gui["tvTimelogs"].append([
         timelog.id,
         timelog.descr_short,
+        timelog.timestamp_str,
         timelog.time_as_human,
         timelog.time_transport_as_human,
+        Knj::Locales.number_out(timelog[:transportlength], 0),
+        timelog.transport_descr_short,
+        Knj::Locales.number_out(timelog[:transportcosts], 2),
+        Knj::Strings.yn_str(timelog[:travelfixed], true, false),
+        Knj::Strings.yn_str(timelog[:workinternal], true, false),
         Knj::Strings.yn_str(timelog[:sync_need], true, false),
         timelog.task_name
       ])
