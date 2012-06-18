@@ -54,7 +54,7 @@ class Openall_time_applet::Gui::Win_sync_overview
     
     if rowc == 1
       #Show error-message and destroy the window, if no timelogs was to be synced.
-      Knj::Gtk2.msgbox(_("There is nothing to sync at this time."))
+      Knj::Gtk2.msgbox("msg" => _("There is nothing to sync at this time."), "run" => false)
       @gui["window"].destroy
     else
       #...else show the window.

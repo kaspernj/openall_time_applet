@@ -301,6 +301,8 @@ class Openall_time_applet
         sw.percent = 1
         
         sleep 1 if !block_given?
+        sw.destroy
+        sw = nil
         yield if block_given?
       rescue => e
         sw.destroy
