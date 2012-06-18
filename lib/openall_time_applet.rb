@@ -118,7 +118,8 @@ class Openall_time_applet
   
   #Creates a runfile or sending a command to the running OpenAll-Time-Applet through the Unix-socket.
   def check_runfile_and_cmds
-    if File.exists?(CONFIG[:run_path])
+    #If run-file exists and the PID within is still running, then send command (if given) and exit.
+    if File.exists?(CONFIG[:run_path]) and Knj::Unix_proc.pid_running?(File.read(CONFIG[:run_path]).to_i)
       cmd = nil
       ARGV.each do |val|
         if match = val.match(/^--cmd=(.+)$/)
@@ -302,6 +303,8 @@ class Openall_time_applet
         sleep 1 if !block_given?
         yield if block_given?
       rescue => e
+        sw.destroy
+        sw = nil
         Knj::Gtk2.msgbox("msg" => Knj::Errors.error_str(e), "type" => "warning", "title" => _("Error"), "run" => false)
       ensure
         sw.destroy if sw
