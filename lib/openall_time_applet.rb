@@ -9,22 +9,9 @@ else
   require "knjrbfw"
 end
 
-require "gtk2"
 require "sqlite3"
 require "gettext"
 require "base64"
-
-#For msgbox and translation of windows.
-require "knj/gtk2"
-
-#For easy initialization, getting and settings of values on comboboxes.
-require "knj/gtk2_cb"
-
-#For easy initialization, getting and settings of values on treeviews.
-require "knj/gtk2_tv"
-
-#For easy making status-windows with progressbar.
-require "knj/gtk2_statuswindow"
 
 #The base class of the applet. Spawns all windows, holds subclasses for models and gui, holds models objects and holds database-objects.
 class Openall_time_applet
@@ -68,17 +55,23 @@ class Openall_time_applet
   end
   
   #Various readable variables.
-  attr_reader :db, :ob, :ti, :timelog_active, :timelog_active_time
+  attr_reader :db, :debug, :ob, :ti, :timelog_active, :timelog_active_time
   attr_accessor :reminder_next
   
   #Config controlling paths and more.
   CONFIG = {
     :settings_path => "#{Knj::Os.homedir}/.openall_time_applet",
-    :db_path => "#{Knj::Os.homedir}/.openall_time_applet/openall_time_applet.sqlite3"
+    :run_path => "#{Knj::Os.homedir}/.openall_time_applet/run",
+    :db_path => "#{Knj::Os.homedir}/.openall_time_applet/openall_time_applet.sqlite3",
+    :sock_path => "#{Knj::Os.homedir}/.openall_time_applet/sock"
   }
   
   #Initializes config-dir and database.
   def initialize(args = {})
+    self.check_runfile_and_cmds
+    self.require_gtk2
+    
+    @debug = args[:debug]
     Dir.mkdir(CONFIG[:settings_path]) if !File.exists?(CONFIG[:settings_path])
     
     #Database-connection.
@@ -118,6 +111,59 @@ class Openall_time_applet
     
     #Start reminder.
     self.reminding
+    
+    #Start unix-socket that listens for remote control.
+    @unix_socket = Openall_time_applet::Unix_socket.new(:oata => self)
+  end
+  
+  #Creates a runfile or sending a command to the running OpenAll-Time-Applet through the Unix-socket.
+  def check_runfile_and_cmds
+    if File.exists?(CONFIG[:run_path])
+      cmd = nil
+      ARGV.each do |val|
+        if match = val.match(/^--cmd=(.+)$/)
+          cmd = match[1]
+          break
+        end
+      end
+      
+      if cmd
+        print "Executing command through sock: #{cmd}\n"
+        
+        require "socket"
+        UNIXSocket.open(CONFIG[:sock_path]) do |sock|
+          sock.puts(cmd)
+        end
+      end
+      
+      puts "Already running"
+      exit
+    end
+    
+    File.open(CONFIG[:run_path], "w") do |fp|
+      fp.write(Process.pid)
+    end
+    
+    Kernel.at_exit do
+      File.unlink(CONFIG[:run_path]) if File.exists?(CONFIG[:run_path]) and File.read(CONFIG[:run_path]).to_i == Process.pid
+    end
+  end
+  
+  #Requires the heavy Gtk-stuff.
+  def require_gtk2
+    require "gtk2"
+    
+    #For msgbox and translation of windows.
+    require "knj/gtk2"
+    
+    #For easy initialization, getting and settings of values on comboboxes.
+    require "knj/gtk2_cb"
+    
+    #For easy initialization, getting and settings of values on treeviews.
+    require "knj/gtk2_tv"
+    
+    #For easy making status-windows with progressbar.
+    require "knj/gtk2_statuswindow"
   end
   
   #Updates the database according to the db-schema.
@@ -179,6 +225,12 @@ class Openall_time_applet
     @ti = Openall_time_applet::Gui::Trayicon.new(:oata => self)
   end
   
+  def show_main
+    Knj::Gtk2::Window.unique!("main") do
+      Openall_time_applet::Gui::Win_main.new(:oata => self)
+    end
+  end
+  
   #Spawns the preference-window.
   def show_preferences
     Knj::Gtk2::Window.unique!("preferences") do
@@ -230,10 +282,10 @@ class Openall_time_applet
   end
   
   #Synchronizes organisations, tasks and worktimes.
-  def sync_static
+  def sync_static(args = nil)
     sw = Knj::Gtk2::StatusWindow.new
     
-    Knj::Thread.new do
+    return Knj::Thread.new do
       begin
         sw.label = _("Updating organisation-cache.")
         self.update_organisation_cache
@@ -247,7 +299,8 @@ class Openall_time_applet
         self.update_worktime_cache
         sw.percent = 1
         
-        sleep 1
+        sleep 1 if !block_given?
+        yield if block_given?
       rescue => e
         Knj::Gtk2.msgbox("msg" => Knj::Errors.error_str(e), "type" => "warning", "title" => _("Error"), "run" => false)
       ensure

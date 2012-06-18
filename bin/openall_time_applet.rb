@@ -5,6 +5,6 @@ require "../lib/openall_time_applet.rb"
 
 GetText.bindtextdomain("default", "../locales", ENV["LANGUAGE"])
 
-oata = Openall_time_applet.new
+oata = Openall_time_applet.new(:debug => true)
 
 Gtk.main

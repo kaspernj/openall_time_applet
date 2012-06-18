@@ -1,6 +1,7 @@
 = openall_time_applet
 
-Description goes here.
+Open main window from shell when time applet is already running:
+ ruby-1.9.2-head openall_time_applet.rb --cmd=open_main_window
 
 == Contributing to openall_time_applet
  

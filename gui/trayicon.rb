@@ -4,6 +4,7 @@ class Openall_time_applet::Gui::Trayicon
   
   def initialize(args)
     @args = args
+    @debug = @args[:oata].debug
     
     @ti = Gtk::StatusIcon.new
     @ti.signal_connect("popup-menu", &self.method(:on_statusicon_rightclick))
@@ -26,6 +27,8 @@ class Openall_time_applet::Gui::Trayicon
   
   #This updates the icon in the system-tray. It draws seconds on the icon, if a timelog is being tracked.
   def update_icon
+    print "Updating icon.\n" if @debug
+    
     color = Knj::Opts.get("tray_text_color")
     color = "black" if color.to_s.strip.length <= 0
     
@@ -82,15 +85,6 @@ class Openall_time_applet::Gui::Trayicon
   end
   
   def on_statusicon_rightclick(tray, button, time)
-    #Build rightclick-menu for tray-icon.
-    timelog_new = Gtk::ImageMenuItem.new(Gtk::Stock::NEW)
-    timelog_new.label = _("New timelog")
-    timelog_new.signal_connect("activate", &self.method(:on_timelogNew_activate))
-    
-    overview = Gtk::ImageMenuItem.new(Gtk::Stock::EDIT)
-    overview.label = _("Timelog list")
-    overview.signal_connect("activate", &self.method(:on_overview_activate))
-    
     worktime_overview = Gtk::ImageMenuItem.new(Gtk::Stock::HOME)
     worktime_overview.label = _("Week view")
     worktime_overview.signal_connect("activate", &self.method(:on_worktimeOverview_activate))
@@ -106,8 +100,6 @@ class Openall_time_applet::Gui::Trayicon
     sync.signal_connect("activate", &self.method(:on_sync_activate))
     
     menu = Gtk::Menu.new
-    menu.append(timelog_new)
-    menu.append(overview)
     menu.append(worktime_overview)
     menu.append(Gtk::SeparatorMenuItem.new)
     menu.append(pref)
@@ -158,19 +150,11 @@ class Openall_time_applet::Gui::Trayicon
   end
   
   def on_statusicon_leftclick(*args)
-    @args[:oata].show_timelog_new
+    @args[:oata].show_main
   end
   
   def on_preferences_activate(*args)
-    @args[:oata].show_preferences
-  end
-  
-  def on_timelogNew_activate(*args)
-    @args[:oata].show_timelog_new
-  end
-  
-  def on_overview_activate(*args)
-    @args[:oata].show_overview
+    @args[:oata].show_main
   end
   
   def on_worktimeOverview_activate(*args)
