@@ -239,18 +239,6 @@ class Openall_time_applet
     end
   end
   
-  def show_timelog_new
-    Knj::Gtk2::Window.unique!("timelog_new") do
-      Openall_time_applet::Gui::Win_timelog_edit.new(:oata => self)
-    end
-  end
-  
-  def show_timelog_edit(timelog)
-    Knj::Gtk2::Window.unique!("timelog_edit_#{timelog.id}") do
-      Openall_time_applet::Gui::Win_timelog_edit.new(:oata => self, :timelog => timelog)
-    end
-  end
-  
   def show_overview
     Knj::Gtk2::Window.unique!("overview") do
       Openall_time_applet::Gui::Win_overview.new(:oata => self)
@@ -284,7 +272,7 @@ class Openall_time_applet
   
   #Synchronizes organisations, tasks and worktimes.
   def sync_static(args = nil)
-    sw = Knj::Gtk2::StatusWindow.new
+    sw = Knj::Gtk2::StatusWindow.new("transient_for" => args["transient_for"])
     
     return Knj::Thread.new do
       begin
@@ -301,11 +289,11 @@ class Openall_time_applet
         sw.percent = 1
         
         sleep 1 if !block_given?
-        sw.destroy
+        sw.destroy if sw
         sw = nil
         yield if block_given?
       rescue => e
-        sw.destroy
+        sw.destroy if sw
         sw = nil
         Knj::Gtk2.msgbox("msg" => Knj::Errors.error_str(e), "type" => "warning", "title" => _("Error"), "run" => false)
       ensure
@@ -353,6 +341,7 @@ class Openall_time_applet
         :time => @timelog_active[:time].to_i + secs_passed,
         :sync_need => 1
       )
+      @timelog_logged_time[:timestamp_end] = Time.now
     end
     
     @timelog_active = nil
@@ -362,10 +351,33 @@ class Openall_time_applet
   
   #Sets a new timelog to track. Stops tracking of previous timelog if already tracking.
   def timelog_active=(timelog)
-    self.timelog_stop_tracking
+    begin
+      #Check if there has been logged time another day - if so, clone it and begin logging on the clone instead.
+      tlt = @ob.list(:Timelog_logged_time, {
+        "timelog" => timelog,
+        "timestamp_start_day_not" => Time.now,
+        "limit" => 1
+      })
+      if !tlt.empty?
+        timelog = @ob.add(:Timelog, {
+          :task_id => timelog[:task_id],
+          :timestamp => Time.now,
+          :descr => timelog[:descr],
+          :transportdescription => timelog[:transportdescription],
+          :workinternal => timelog[:workinternal],
+          :timetype => timelog[:timetype]
+        })
+        #raise sprintf(_("You have already logged on this timelog on %s"), tlt.first.timestamp_start.out)
+      end
+      
+      self.timelog_stop_tracking
+      @timelog_logged_time = @ob.add(:Timelog_logged_time, {:timelog_id => timelog.id})
+      @timelog_active = timelog
+      @timelog_active_time = Time.new
+    rescue => e
+      Knj::Gtk2.msgbox("msg" => Knj::Errors.error_str(e), "type" => "warning", "title" => _("Error"), "run" => false)
+    end
     
-    @timelog_active = timelog
-    @timelog_active_time = Time.new
     @ti.update_icon if @ti
   end
   

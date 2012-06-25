@@ -35,6 +35,7 @@ Openall_time_applet::DB_SCHEMA = {
         {"name" => "task_id", "type" => "int"},
         {"name" => "timestamp", "type" => "datetime"},
         {"name" => "time", "type" => "int"},
+        {"name" => "time_sync", "type" => "varchar"},
         {"name" => "timetype", "type" => "enum", "maxlength" => "'normal','overtime150','overtime200'", "default" => "normal"},
         {"name" => "time_transport", "type" => "int"},
         {"name" => "transportlength", "type" => "int"},
@@ -48,6 +49,17 @@ Openall_time_applet::DB_SCHEMA = {
       ],
       "indexes" => [
         "task_id"
+      ]
+    },
+    "Timelog_logged_time" => {
+      "columns" => [
+        {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
+        {"name" => "timelog_id", "type" => "int"},
+        {"name" => "timestamp_start", "type" => "datetime"},
+        {"name" => "timestamp_end", "type" => "datetime"}
+      ],
+      "indexes" => [
+        "timelog_id"
       ]
     },
     "Worktime" => {

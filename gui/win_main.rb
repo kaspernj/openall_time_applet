@@ -128,16 +128,6 @@ class Openall_time_applet::Gui::Win_main
     end
   end
   
-  def on_tvTimelogs_row_activated(*args)
-    row = @gui["tvTimelogs"].sel
-    return nil if !row
-    
-    timelog = @args[:oata].ob.get(:Timelog, row[0])
-    win_timelog_edit = @args[:oata].show_timelog_edit(timelog)
-    win_timelog_edit.gui["window"].modal = @gui["window"]
-    win_timelog_edit.gui["window"].transient_for = @gui["window"]
-  end
-  
   def on_imiQuit_activate
     @gui["window"].destroy
   end
@@ -180,7 +170,7 @@ class Openall_time_applet::Gui::Win_main
   end
   
   def on_btnSync_clicked
-    @args[:oata].sync_static do
+    @args[:oata].sync_static("transient_for" => @gui["window"]) do
       @args[:oata].sync
     end
   end
