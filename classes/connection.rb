@@ -21,7 +21,20 @@ class Openall_time_applet::Connection
     
     #Verify login by reading dashboard HTML.
     res = @http.get("index.php?c=Dashboard")
-    raise _("Could not log in.") if !res.body.match(/<ul id="webticker" >/)
+    
+    if !res.body.match(/<ul\s*id="webticker"\s*>/)
+      tmp_path = "#{Knj::Os.tmpdir}/openall_login_debug.txt"
+      File.open(tmp_path, "w") do |fp|
+        fp.write(res.body)
+      end
+      
+      #Raise custom wrong-username error if login-form is still shown.
+      if res.body.index("<div id=\"loginform\"") != nil
+        raise _("Wrong username and/or password.")
+      end
+      
+      raise sprintf(_("Could not log in because of unknown reason. Please check debug-output in '%s'."), tmp_path)
+    end
   end
   
   def request(args)

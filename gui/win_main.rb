@@ -28,15 +28,43 @@ class Openall_time_applet::Gui::Win_main
     
     init_data = @gui["tvTimelogs"].init([
       _("ID"),
-      _("Description"),
-      _("Timestamp"),
-      _("Time"),
-      _("Transport"),
-      _("Length"),
-      _("Transport descr."),
-      _("Transport costs"),
       {
-        :title => _("Fixed travel"),
+        :title => _("Description"),
+        :type => :string,
+        :markup => true
+      },
+      {
+        :title => _("Timestamp"),
+        :type => :string,
+        :markup => true
+      },
+      {
+        :title => _("Time"),
+        :type => :string,
+        :markup => true
+      },
+      {
+        :title => _("Transport"),
+        :type => :string,
+        :markup => true
+      },
+      {
+        :title => _("Length"),
+        :type => :string,
+        :markup => true
+      },
+      {
+        :title => _("Descr."),
+        :type => :string,
+        :markup => true
+      },
+      {
+        :title => _("Costs"),
+        :type => :string,
+        :markup => true
+      },
+      {
+        :title => _("Fixed"),
         :type => :toggle
       },
       {
@@ -51,7 +79,8 @@ class Openall_time_applet::Gui::Win_main
         :title => _("Task"),
         :type => :combo,
         :model => task_ls,
-        :has_entry => false
+        :has_entry => false,
+        :markup => true
       }
     ])
     
@@ -60,8 +89,16 @@ class Openall_time_applet::Gui::Win_main
       :tv => @gui["tvTimelogs"],
       :model_class => :Timelog,
       :renderers => init_data[:renderers],
-      :change_before => proc{ @dont_reload = true },
-      :change_after => proc{ @dont_reload = false },
+      :change_before => proc{|d|
+        if (d[:col_no] == 3 or d[:col_no] == 2) and @args[:oata].timelog_active and @args[:oata].timelog_active.id == d[:model].id
+          raise _("You cannot edit the time for the active timelog.")
+        end
+        
+        @dont_reload = true
+      },
+      :change_after => proc{
+        @dont_reload = false
+      },
       :cols => {
         1 => :descr,
         2 => {:col => :timestamp, :type => :datetime},
@@ -90,10 +127,24 @@ class Openall_time_applet::Gui::Win_main
     )
     
     @gui["tvTimelogs"].columns[0].visible = false
+    
     self.reload_timelogs
     
     #Reload the treeview if something happened to a timelog.
     @reload_id = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["add", "update", "delete"], &self.method(:reload_timelogs))
+    
+    #Update switch-button.
+    self.update_switch_button
+    
+    #Update switch-button when active timelog is changed.
+    @event_timelog_active_changed = @args[:oata].events.connect(:timelog_active_changed) do
+      self.update_switch_button
+      self.check_rows
+    end
+    
+    @timeout_id = Gtk.timeout_add(1000) do
+      self.check_rows
+    end
     
     @gui["window"].show_all
   end
@@ -113,12 +164,12 @@ class Openall_time_applet::Gui::Win_main
     @args[:oata].ob.list(:Timelog, {"orderby" => "id"}) do |timelog|
       @gui["tvTimelogs"].append([
         timelog.id,
-        timelog[:descr],
+        Knj::Web.html(timelog[:descr]),
         timelog.timestamp_str,
         timelog.time_as_human,
         timelog.time_transport_as_human,
         Knj::Locales.number_out(timelog[:transportlength], 0),
-        timelog.transport_descr_short,
+        Knj::Web.html(timelog[:transportdescription]),
         Knj::Locales.number_out(timelog[:transportcosts], 2),
         Knj::Strings.yn_str(timelog[:travelfixed], true, false),
         Knj::Strings.yn_str(timelog[:workinternal], true, false),
@@ -126,10 +177,30 @@ class Openall_time_applet::Gui::Win_main
         timelog.task_name
       ])
     end
+    
+    #Reset cache of which rows are set to bold.
+    @bold_rows = {}
   end
   
   def on_imiQuit_activate
-    @gui["window"].destroy
+    #Check if a timelog needs to be synced. If so the user needs to confirm he really wants to quit.
+    timelog_found = nil
+    do_destroy = true
+    
+    @args[:oata].ob.list(:Timelog) do |timelog|
+      if timelog[:time].to_f > 0 or timelog[:time_transport].to_f > 0 or timelog[:sync_need].to_i == 1
+        timelog_found = timelog
+        break
+      end
+    end
+    
+    if timelog_found
+      if Knj::Gtk2.msgbox(sprintf(_("The timelog '%s' has not been synced. Are you sure you want to quit?"), timelog_found[:descr]), "yesno") != "yes"
+        do_destroy = false
+      end
+    end
+    
+    @args[:oata].destroy if do_destroy
   end
   
   def on_imiPreferences_activate
@@ -143,30 +214,95 @@ class Openall_time_applet::Gui::Win_main
   def on_window_destroy
     #Unconnect reload-event. Else it will crash on call to destroyed object. Also frees up various ressources.
     @args[:oata].ob.unconnect("object" => :Timelog, "conn_id" => @reload_id)
+    @args[:oata].events.disconnect(:timelog_active_changed, @event_timelog_active_changed) if @event_timelog_active_changed
+    @event_timelog_active_changed = nil
+    Gtk.timeout_remove(@timeout_id)
   end
   
   def on_expOverview_activate(expander)
+    width = @gui["window"].size[0]
+    
     if !expander.expanded?
-      @gui["window"].set_size_request(-1, 480)
+      @gui["window"].resize(width, 480)
     else
-      @gui["window"].set_size_request(-1, -1)
+      Gtk.timeout_add(200) do
+        @gui["window"].resize(width, 1)
+        false
+      end
     end
   end
   
   def on_btnSwitch_clicked
-    task = @gui["cbTask"].sel
-    if !task.is_a?(Knj::Datarow)
-      Knj::Gtk2.msgbox(_("Please choose a task."), "warning")
-      return nil
+    if @args[:oata].timelog_active
+      @args[:oata].timelog_stop_tracking
+      @gui["txtDescr"].grab_focus
+    else
+      task = @gui["cbTask"].sel
+      if !task.is_a?(Knj::Datarow)
+        task_id = 0
+      else
+        task_id = task.id
+      end
+      
+      @timelog = @args[:oata].ob.add(:Timelog, {
+        :task_id => task_id,
+        :descr => @gui["txtDescr"].text
+      })
+      @args[:oata].timelog_active = @timelog
+      @gui["txtDescr"].text = ""
+      @gui["cbTask"].sel = _("Choose:")
     end
     
-    @timelog = @args[:oata].ob.add(:Timelog, {
-      :task_id => task.id,
-      :descr => @gui["txtDescr"].text
-    })
-    @args[:oata].timelog_active = @timelog
-    @gui["txtDescr"].text = ""
-    @gui["cbTask"].sel = _("Choose:")
+    self.update_switch_button
+  end
+  
+  #This method updates the switch button to start or stop, based on the if a timelog is tracked or not.
+  def update_switch_button
+    but = @gui["btnSwitch"]
+    tlog_act = @args[:oata].timelog_active
+    
+    if tlog_act
+      but.image = Gtk::Image.new(Gtk::Stock::MEDIA_STOP, Gtk::IconSize::BUTTON)
+      but.label = _("Stop")
+    else
+      but.image = Gtk::Image.new(Gtk::Stock::MEDIA_RECORD, Gtk::IconSize::BUTTON)
+      but.label = _("Start")
+    end
+  end
+  
+  #This method runs through all rows in the treeview and checks if a row should be marked with bold. It also increases the time in the time-column for the tracked timelog.
+  def check_rows
+    act_timelog = @args[:oata].timelog_active
+    
+    if act_timelog
+      act_timelog_id = act_timelog.id
+    else
+      act_timelog_id = nil
+    end
+    
+    rows_bold = [1, 2, 3, 4, 5, 6, 7, 11]
+    
+    @gui["tvTimelogs"].model.each do |model, path, iter|
+      timelog_id = model.get_value(iter, 0).to_i
+      bold = false
+      iter_id = iter.to_s.to_i
+      
+      #Update time tracked.
+      if timelog_id == act_timelog_id
+        secs = act_timelog[:time].to_i + @args[:oata].timelog_active_time_tracked
+        iter[3] = "<b>#{Knj::Strings.secs_to_human_time_str(secs)}</b>"
+        bold = true
+      end
+      
+      #Set all columns to bold if not already set.
+      if bold and !@bold_rows.key?(iter_id)
+        rows_bold.each do |row_no|
+          iter[row_no] = "<b>#{model.get_value(iter, row_no)}</b>"
+        end
+        
+        @bold_rows[iter_id] = true
+      end
+    end
   end
   
   def on_btnSync_clicked
@@ -189,7 +325,21 @@ class Openall_time_applet::Gui::Win_main
   end
   
   def on_btnPlus_clicked
-    @args[:oata].ob.add(:Timelog)
+    #Add new timelog to database.
+    timelog = @args[:oata].ob.add(:Timelog)
+    
+    #Focus new timelog in treeview and open the in-line-editting for the description.
+    added_id = timelog.id.to_i
+    
+    @gui["tvTimelogs"].model.each do |model, path, iter|
+      timelog_id = model.get_value(iter, 0).to_i
+      
+      if timelog_id == added_id
+        col = @gui["tvTimelogs"].columns[1]
+        @gui["tvTimelogs"].set_cursor(path, col, true)
+        break
+      end
+    end
   end
   
   #Redirects 'enter'-events to 'switch'-click-event.

@@ -85,29 +85,7 @@ class Openall_time_applet::Gui::Trayicon
   end
   
   def on_statusicon_rightclick(tray, button, time)
-    worktime_overview = Gtk::ImageMenuItem.new(Gtk::Stock::HOME)
-    worktime_overview.label = _("Week view")
-    worktime_overview.signal_connect("activate", &self.method(:on_worktimeOverview_activate))
-    
-    pref = Gtk::ImageMenuItem.new(Gtk::Stock::PREFERENCES)
-    pref.signal_connect("activate", &self.method(:on_preferences_activate))
-    
-    quit = Gtk::ImageMenuItem.new(Gtk::Stock::QUIT)
-    quit.signal_connect("activate", &self.method(:on_quit_activate))
-    
-    sync = Gtk::ImageMenuItem.new(Gtk::Stock::HARDDISK)
-    sync.label = _("Synchronize with OpenAll")
-    sync.signal_connect("activate", &self.method(:on_sync_activate))
-    
     menu = Gtk::Menu.new
-    menu.append(worktime_overview)
-    menu.append(Gtk::SeparatorMenuItem.new)
-    menu.append(pref)
-    
-    
-    #Only add seperator if more than one timelog.
-    timelog_count = @args[:oata].ob.list(:Timelog, {"count" => true})
-    menu.append(Gtk::SeparatorMenuItem.new) if timelog_count > 0
     
     #Make a list of all timelogs in the menu.
     @args[:oata].ob.list(:Timelog, {"orderby" => "id"}) do |timelog|
@@ -139,9 +117,6 @@ class Openall_time_applet::Gui::Trayicon
       menu.append(label)
     end
     
-    menu.append(Gtk::SeparatorMenuItem.new)
-    menu.append(sync)
-    menu.append(quit)
     menu.show_all
     
     menu.popup(nil, nil, button, time) do |menu, x, y|
@@ -151,40 +126,6 @@ class Openall_time_applet::Gui::Trayicon
   
   def on_statusicon_leftclick(*args)
     @args[:oata].show_main
-  end
-  
-  def on_preferences_activate(*args)
-    @args[:oata].show_main
-  end
-  
-  def on_worktimeOverview_activate(*args)
-    @args[:oata].show_worktime_overview
-  end
-  
-  def on_quit_activate(*args)
-    #Check if a timelog needs to be synced. If so the user needs to confirm he really wants to quit.
-    timelog_found = nil
-    do_destroy = true
-    
-    @args[:oata].ob.list(:Timelog) do |timelog|
-      if timelog[:time].to_f > 0 or timelog[:time_transport].to_f > 0 or timelog[:sync_need].to_i == 1
-        timelog_found = timelog
-        break
-      end
-    end
-    
-    if timelog_found
-      if Knj::Gtk2.msgbox(sprintf(_("The timelog '%s' has not been synced. Are you sure you want to quit?"), timelog_found[:descr]), "yesno") != "yes"
-        do_destroy = false
-      end
-    end
-    
-    @args[:oata].destroy if do_destroy
-  end
-  
-  def on_sync_activate(*args)
-    @args[:oata].sync_static
-    @args[:oata].sync
   end
   
   def on_stopTracking_activate(*args)

@@ -55,7 +55,7 @@ class Openall_time_applet
   end
   
   #Various readable variables.
-  attr_reader :db, :debug, :ob, :ti, :timelog_active, :timelog_active_time
+  attr_reader :db, :debug, :events, :ob, :ti, :timelog_active, :timelog_active_time
   attr_accessor :reminder_next
   
   #Config controlling paths and more.
@@ -96,6 +96,9 @@ class Openall_time_applet
     @ob.events.connect(:no_name) do |event, classname|
       _("not set")
     end
+    
+    @events = Knj::Event_handler.new
+    @events.add_event(:name => :timelog_active_changed)
     
     #Options used to save various information (Openall-username and such).
     Knj::Opts.init("knjdb" => @db, "table" => "Option")
@@ -347,6 +350,7 @@ class Openall_time_applet
     @timelog_active = nil
     @timelog_active_time = nil
     @ti.update_icon if @ti
+    @events.call(:timelog_active_changed)
   end
   
   #Sets a new timelog to track. Stops tracking of previous timelog if already tracking.
@@ -374,11 +378,19 @@ class Openall_time_applet
       @timelog_logged_time = @ob.add(:Timelog_logged_time, {:timelog_id => timelog.id})
       @timelog_active = timelog
       @timelog_active_time = Time.new
+      
+      @events.call(:timelog_active_changed)
     rescue => e
       Knj::Gtk2.msgbox("msg" => Knj::Errors.error_str(e), "type" => "warning", "title" => _("Error"), "run" => false)
     end
     
     @ti.update_icon if @ti
+  end
+  
+  #Returns the amount of seconds tracked.
+  def timelog_active_time_tracked
+    return 0 if !@timelog_active_time
+    return Time.now.to_i - @timelog_active_time.to_i
   end
   
   #Saves tracking-status if tracking. Stops Gtks main loop.
