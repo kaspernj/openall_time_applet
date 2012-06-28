@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{openall_time_applet}
-  s.version = "0.0.15"
+  s.version = "0.0.16"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
-  s.date = %q{2012-06-25}
+  s.date = %q{2012-06-28}
   s.default_executable = %q{openall_time_applet.rb}
   s.description = %q{Off-line time-tracking for OpenAll with syncing when online.}
   s.email = %q{k@spernj.org}
