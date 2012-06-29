@@ -89,12 +89,16 @@ class Openall_time_applet::Gui::Trayicon
     
     #Make a list of all timelogs in the menu.
     @args[:oata].ob.list(:Timelog, {"orderby" => "id"}) do |timelog|
-      label = sprintf(_("Track: %s"), timelog.descr_short)
+      label = timelog.descr_short
       
       #If this is the active timelog, make the label bold, by getting the label-child and using HTML-markup on it.
       if @args[:oata].timelog_active and @args[:oata].timelog_active.id == timelog.id
         mi = Gtk::ImageMenuItem.new(Gtk::Stock::MEDIA_RECORD)
-        mi.children[0].markup = "<b>#{label}</b>"
+        
+        secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i
+        mins = (secs.to_f / 60.0).round(0)
+        
+        mi.children[0].markup = "<b>#{Knj::Web.html(label)} (#{mins})</b>"
         mi.signal_connect("activate", &self.method(:on_stopTracking_activate))
       else
         mi = Gtk::MenuItem.new(label)
@@ -107,16 +111,30 @@ class Openall_time_applet::Gui::Trayicon
       menu.append(mi)
     end
     
-    if @args[:oata].timelog_active
-      menu.append(Gtk::SeparatorMenuItem.new)
+    
+    #Start-menu-item. Opens main-window, expands treeview and calls the plus-button which adds a new timelog and focuses treeview.
+    start = Gtk::ImageMenuItem.new(Gtk::Stock::NEW)
+    start.children[0].label = _("New")
+    start.signal_connect(:activate) do
+      #Open main-window and focus it.
+      @args[:oata].show_main
       
-      #If tracking is active, then show how many seconds has been tracked until now in menu as an item.
-      secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i
-      mins = (secs.to_f / 60.0).round(0)
-      label = Gtk::MenuItem.new(sprintf(_("%s minutes"), mins))
-      menu.append(label)
+      #Get main-window-object.
+      win_main = Knj::Gtk2::Window.get("main")
+      win_main.gui["expOverview"].activate
+      
+      Gtk.timeout_add(250) do
+        #Make a "plus"-click which adds a new task.
+        win_main.gui["btnPlus"].clicked
+        false
+      end
     end
     
+    menu.append(Gtk::SeparatorMenuItem.new)
+    menu.append(start)
+    
+    
+    #Show the menu.
     menu.show_all
     
     menu.popup(nil, nil, button, time) do |menu, x, y|

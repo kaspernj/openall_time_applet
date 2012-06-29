@@ -22,7 +22,7 @@ class Openall_time_applet::Connection
     #Verify login by reading dashboard HTML.
     res = @http.get("index.php?c=Dashboard")
     
-    if !res.body.match(/<ul\s*id="webticker"\s*>/)
+    if !res.body.match(/<ul\s*id="webticker"\s*>/) and !res.body.index("<a href=\"index.php?c=Dashboard&m=editDashboard\">") == nil
       tmp_path = "#{Knj::Os.tmpdir}/openall_login_debug.txt"
       File.open(tmp_path, "w") do |fp|
         fp.write(res.body)
