@@ -117,6 +117,9 @@ class Openall_time_applet
     
     #Start unix-socket that listens for remote control.
     @unix_socket = Openall_time_applet::Unix_socket.new(:oata => self)
+    
+    #Start autosync-timeout.
+    self.restart_autosync
   end
   
   #Creates a runfile or sending a command to the running OpenAll-Time-Applet through the Unix-socket.
@@ -306,7 +309,7 @@ class Openall_time_applet
   end
   
   #Shows the sync overview, which must be seen before the actual sync.
-  def sync
+  def show_prepare_sync
     Openall_time_applet::Gui::Win_sync_overview.new(:oata => self)
   end
   
@@ -400,6 +403,62 @@ class Openall_time_applet
     #Use quit-variable to avoid Gtk-warnings.
     Gtk.main_quit if @quit != true
     @quit = true
+  end
+  
+  #Restarts the auto-syncing timeout.
+  def restart_autosync
+    #Remove current timeout.
+    Gtk.timeout_remove(@autosync_timeout) if @autosync_timeout
+    @autosync_timeout = nil
+    
+    #Get various info from db.
+    enabled = Knj::Strings.yn_str(Knj::Opts.get("autosync_enabled"), true, false)
+    interval = Knj::Opts.get("autosync_interval").to_i
+    interval_msecs = interval * 60 * 1000
+    
+    if !enabled #dont continue if autosync isnt enabled.
+      self.status = _("Disabled automatic synchronization.")
+      return nil
+    end
+    
+    self.status = sprintf(_("Restarted automatic sync. to run every %s minutes."), Knj::Locales.number_out(interval, 1))
+    
+    #Start new timeout.
+    @autosync_timeout = Gtk.timeout_add(interval_msecs) do
+      if !@sync_thread
+        @sync_thread = Knj::Thread.new(&self.method(:run_autosync))
+      end
+      
+      true
+    end
+  end
+  
+  #This method is executing the automatic synchronization.
+  def run_autosync
+    begin
+      self.status = _("Synchronizing organisations.")
+      self.update_organisation_cache
+      
+      self.status = _("Synchronizing worktime.")
+      self.update_worktime_cache
+      
+      self.status = _("Automatic synchronization done.")
+    rescue => e
+      self.status = sprintf(_("Error while auto-syncing: %s"), e.message)
+      puts Knj::Errors.error_str(e)
+    ensure
+      @sync_thread = nil
+    end
+  end
+  
+  #Prints status to the command line and the statusbar in the main window (if the main window is open).
+  def status=(newstatus)
+    puts "Status: '#{newstatus}'."
+    win_main = Knj::Gtk2::Window.get("main")
+    
+    if win_main
+      win_main.gui["statusbar"].push(0, newstatus)
+    end
   end
 end
 

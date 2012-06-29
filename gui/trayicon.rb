@@ -121,12 +121,19 @@ class Openall_time_applet::Gui::Trayicon
       
       #Get main-window-object.
       win_main = Knj::Gtk2::Window.get("main")
-      win_main.gui["expOverview"].activate
       
-      Gtk.timeout_add(250) do
-        #Make a "plus"-click which adds a new task.
+      if !win_main.gui["expOverview"].expanded?
+        #If the expander isnt expanded, call the activate and wait a bit before calling the plus-button.
+        win_main.gui["expOverview"].activate
+        
+        Gtk.timeout_add(250) do
+          #Make a "plus"-click which adds a new task.
+          win_main.gui["btnPlus"].clicked
+          false
+        end
+      else
+        #If the expander is already expanded, then call the plus-button instantly to prevent the "laggy" feeling that would otherwise have occurred because of the timeout.
         win_main.gui["btnPlus"].clicked
-        false
       end
     end
     
@@ -134,7 +141,7 @@ class Openall_time_applet::Gui::Trayicon
     menu.append(start)
     
     
-    #Show the menu.
+    #Show the menu and position it correctly (bug with Gnome Shell where popup would be placed under bottom panel, if it isnt done this way by calling 'position_menu').
     menu.show_all
     
     menu.popup(nil, nil, button, time) do |menu, x, y|

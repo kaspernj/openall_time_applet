@@ -90,7 +90,7 @@ class Openall_time_applet::Gui::Win_main
       :model_class => :Timelog,
       :renderers => init_data[:renderers],
       :change_before => proc{|d|
-        if (d[:col_no] == 3 or d[:col_no] == 2) and @args[:oata].timelog_active and @args[:oata].timelog_active.id == d[:model].id
+        if (d[:col_no] == 11 or d[:col_no] == 3 or d[:col_no] == 2) and @args[:oata].timelog_active and @args[:oata].timelog_active.id == d[:model].id
           raise _("You cannot edit the time for the active timelog.")
         end
         
@@ -126,29 +126,65 @@ class Openall_time_applet::Gui::Win_main
       }
     )
     
+    
+    #The ID column should not be visible (it is only used to identify which timelog the row represents).
     @gui["tvTimelogs"].columns[0].visible = false
     
+    
+    #Connect certain column renderers to the editingStarted-method, so editing can be canceled, if the user tries to edit forbidden data on the active timelog.
+    init_data[:renderers][1].signal_connect_after("editing-started", :descr, &self.method(:on_cell_editingStarted))
+    init_data[:renderers][2].signal_connect_after("editing-started", :timestamp, &self.method(:on_cell_editingStarted))
+    init_data[:renderers][3].signal_connect_after("editing-started", :time, &self.method(:on_cell_editingStarted))
+    init_data[:renderers][11].signal_connect_after("editing-started", :task, &self.method(:on_cell_editingStarted))
+    
+    
+    #Fills the timelogs-treeview with data.
     self.reload_timelogs
+    
     
     #Reload the treeview if something happened to a timelog.
     @reload_id = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["add", "update", "delete"], &self.method(:reload_timelogs))
     
+    
     #Update switch-button.
     self.update_switch_button
+    
     
     #Update switch-button when active timelog is changed.
     @event_timelog_active_changed = @args[:oata].events.connect(:timelog_active_changed) do
       self.update_switch_button
       self.check_rows
+      self.timelog_info_trigger
     end
     
+    
+    #This timeout controls the updating of the timelog-info-frame and the time-counter for the active timelog in the treeview.
     @timeout_id = Gtk.timeout_add(1000) do
       self.check_rows
+      self.timelog_info_trigger
+      true
     end
     
+    
+    #Show the window.
     @gui["window"].show_all
+    self.timelog_info_trigger
+    width = @gui["window"].size[0]
+    @gui["window"].resize(width, 1)
   end
   
+  #This method is called, when editting starts in a description-, time- or task-cell. If it is the active timelog, then editting is canceled.
+  def on_cell_editingStarted(renderer, editable, path, col_title)
+    iter = @gui["tvTimelogs"].model.get_iter(path)
+    timelog_id = @gui["tvTimelogs"].model.get_value(iter, 0).to_i
+    
+    if tlog = @args[:oata].timelog_active and tlog.id.to_i == timelog_id
+      renderer.stop_editing(true)
+      Knj::Gtk2.msgbox(_("You cannot edit this on the active timelog."))
+    end
+  end
+  
+  #This method is used to do stuff without having the treeview reloading. It executes the given block and then makes the treeview reloadable again.
   def dont_reload
     @dont_reload = true
     begin
@@ -220,15 +256,42 @@ class Openall_time_applet::Gui::Win_main
   end
   
   def on_expOverview_activate(expander)
-    width = @gui["window"].size[0]
-    
-    if !expander.expanded?
-      @gui["window"].resize(width, 480)
+    if expander.expanded?
+      @gui["window"].resize(@gui["window"].size[0], 480)
+      self.timelog_info_trigger
     else
       Gtk.timeout_add(200) do
-        @gui["window"].resize(width, 1)
+        self.timelog_info_trigger
+        @gui["window"].resize(@gui["window"].size[0], 1)
         false
       end
+    end
+  end
+  
+  #This method handles the "Timelog info"-frame. Hides, shows and updates the info in it.
+  def timelog_info_trigger
+    if !@gui["expOverview"].expanded? and tlog = @args[:oata].timelog_active
+      @gui["labTimelogInfoDescr"].markup = "<b>#{Knj::Web.html(tlog[:descr])}</b>"
+      
+      task = tlog.task
+      if !task
+        task_text = "[#{_("no task sat on the timelog")}]"
+      else
+        task_text = task.name
+      end
+      
+      @gui["labTimelogInfoTask"].markup = "<b>#{Knj::Web.html(task_text)}</b>"
+      
+      time_tracked = Knj::Strings.secs_to_human_time_str(@args[:oata].timelog_active_time_tracked + tlog[:time].to_i)
+      @gui["labTimelogInfoTime"].markup = "<b>#{Knj::Web.html(time_tracked)}</b>"
+      
+      @gui["frameTimelogInfo"].show_all
+    else
+      visible = @gui["frameTimelogInfo"].visible?
+      @gui["frameTimelogInfo"].hide
+      
+      #Resize to minimum height, so a big space isnt left.
+      @gui["window"].resize(@gui["window"].size[0], 1) if visible and !@gui["expOverview"].expanded?
     end
   end
   
@@ -306,9 +369,11 @@ class Openall_time_applet::Gui::Win_main
   end
   
   def on_btnSync_clicked
-    @args[:oata].sync_static("transient_for" => @gui["window"]) do
-      @args[:oata].sync
-    end
+    @args[:oata].show_prepare_sync
+  end
+  
+  def on_miSyncStatic_activate
+    @args[:oata].sync_static("transient_for" => @gui["window"])
   end
   
   def on_btnMinus_clicked

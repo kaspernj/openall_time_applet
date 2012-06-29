@@ -30,6 +30,10 @@ class Openall_time_applet::Gui::Win_preferences
     @tray_colors = {"black" => _("Black"), "green_casalogic" => _("Green (Casalogic)"), "white" => _("White")}
     @gui["cbTrayTextColor"].init(@tray_colors.values)
     @gui["cbTrayTextColor"].sel = @tray_colors[Knj::Opts.get("tray_text_color")] if Knj::Opts.get("tray_text_color").to_s.strip.length > 0
+    
+    #Autosync settings.
+    @gui["cbAutoSync"].active = Knj::Strings.yn_str(Knj::Opts.get("autosync_enabled"), true, false)
+    @gui["txtAutoSyncInterval"].text = Knj::Opts.get("autosync_interval")
   end
   
   #Saves values from widgets into database.
@@ -98,5 +102,20 @@ class Openall_time_applet::Gui::Win_preferences
         end
       end
     end
+  end
+  
+  def on_btnAutoSyncSave_clicked
+    interval = @gui["txtAutoSyncInterval"].text
+    if !Knj::Php.is_numeric(interval)
+      Knj::Gtk2.msgbox(_("The interval was not numeric."))
+      return false
+    end
+    
+    Knj::Opts.set("autosync_enabled", Knj::Strings.yn_str(@gui["cbAutoSync"].active?, 1, 0))
+    Knj::Opts.set("autosync_interval", interval)
+    
+    @args[:oata].restart_autosync
+    
+    Knj::Gtk2.msgbox("msg" => _("The auto. sync. preferences was saved."), "type" => "info")
   end
 end
