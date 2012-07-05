@@ -121,20 +121,7 @@ class Openall_time_applet::Gui::Trayicon
       
       #Get main-window-object.
       win_main = Knj::Gtk2::Window.get("main")
-      
-      if !win_main.gui["expOverview"].expanded?
-        #If the expander isnt expanded, call the activate and wait a bit before calling the plus-button.
-        win_main.gui["expOverview"].activate
-        
-        Gtk.timeout_add(250) do
-          #Make a "plus"-click which adds a new task.
-          win_main.gui["btnPlus"].clicked
-          false
-        end
-      else
-        #If the expander is already expanded, then call the plus-button instantly to prevent the "laggy" feeling that would otherwise have occurred because of the timeout.
-        win_main.gui["btnPlus"].clicked
-      end
+      win_main.gui["txtDescr"].grab_focus
     end
     
     menu.append(Gtk::SeparatorMenuItem.new)

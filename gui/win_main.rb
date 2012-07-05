@@ -23,6 +23,34 @@ class Openall_time_applet::Gui::Win_main
       tasks << task
     end
     
+    
+    #Set up completion for description entry.
+    ec = Gtk::EntryCompletion.new
+    ec.model = Gtk::ListStore.new(String)
+    ec.text_column = 0
+    @gui["txtDescr"].completion = ec
+    
+    added = {}
+    @args[:oata].ob.list(:Worktime, {"orderby" => "timestamp"}) do |worktime|
+      next if added.key?(worktime[:comment])
+      added[worktime[:comment]] = true
+      ec.model.append[0] = worktime[:comment]
+    end
+    
+    @args[:oata].ob.list(:Timelog, {"orderby" => "descr"}) do |timelog|
+      next if added.key?(timelog[:descr])
+      added[timelog[:descr]] = true
+      ec.model.append[0] = timelog[:descr]
+    end
+    
+    ec.signal_connect("match-selected") do |me, model, iter|
+      text = model.get_value(iter, 0)
+      me.entry.text = text
+      true
+    end
+    
+    
+    
     #Add the tasks to the combo-box.
     @gui["cbTask"].init(tasks)
     
@@ -194,14 +222,21 @@ class Openall_time_applet::Gui::Win_main
     end
   end
   
+  #Removes all timelogs from the treeview and adds them again. Does nothing if the 'dont_reload'-variable is set.
   def reload_timelogs
     return nil if @dont_reload or @gui["tvTimelogs"].destroyed?
     @gui["tvTimelogs"].model.clear
-    @args[:oata].ob.list(:Timelog, {"orderby" => "id"}) do |timelog|
+    @args[:oata].ob.list(:Timelog, {"orderby" => [["timestamp", "desc"]]}) do |timelog|
+      begin
+        tstamp_str = timelog.timestamp_str
+      rescue => e
+        tstamp_str = "[#{_("error")}: #{e.message}"
+      end
+      
       @gui["tvTimelogs"].append([
         timelog.id,
         Knj::Web.html(timelog[:descr]),
-        timelog.timestamp_str,
+        tstamp_str,
         timelog.time_as_human,
         timelog.time_transport_as_human,
         Knj::Locales.number_out(timelog[:transportlength], 0),
