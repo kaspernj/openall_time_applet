@@ -258,7 +258,7 @@ class Openall_time_applet::Gui::Win_main
     timelog_found = nil
     do_destroy = true
     
-    @args[:oata].ob.list(:Timelog) do |timelog|
+    @args[:oata].ob.list(:Timelog, "task_id_not" => ["", 0]) do |timelog|
       if timelog.time_total > 0 or timelog.time_total(:transport => true) > 0 or timelog[:sync_need].to_i == 1
         timelog_found = timelog
         break

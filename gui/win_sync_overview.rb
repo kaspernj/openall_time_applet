@@ -138,7 +138,8 @@ class Openall_time_applet::Gui::Win_sync_overview
     return nil if @dont_reload or @gui["tvTimelogs"].destroyed?
     @gui["tvTimelogs"].model.clear
     @timelogs_count = 0
-    @args[:oata].ob.list(:Timelog, {"sync_need" => 1, "task_id_not" => 0, "task_id_not" => "", "orderby" => "timestamp"}) do |timelog|
+    
+    @args[:oata].ob.list(:Timelog, {"sync_need" => 1, "task_id_not" => ["", 0], "orderby" => "timestamp"}) do |timelog|
       #Read time and transport from timelog.
       time = timelog[:time].to_i
       transport = timelog[:time_transport].to_i
