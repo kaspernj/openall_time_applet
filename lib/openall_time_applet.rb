@@ -322,7 +322,11 @@ class Openall_time_applet
       begin
         sw.label = _("Pushing time-updates.")
         self.push_time_updates
-        sw.percent = 0.5
+        sw.percent = 0.3
+        
+        sw.label = _("Update task-cache.")
+        self.update_task_cache
+        sw.percent = 0.66
         
         sw.label = _("Updating worktime-cache.")
         self.update_worktime_cache

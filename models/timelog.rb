@@ -30,7 +30,7 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
       #Go through timelogs that needs syncing and has a task set.
       self.ob.list(:Timelog, {"sync_need" => 1, "task_id_not" => 0}) do |timelog|
         secs_sum = timelog[:time_sync].to_i + timelog[:time_transport].to_i
-        next if secs_sum <= 0
+        next if secs_sum <= 0 or !timelog.task
         
         #The timelog has not yet been created in OpenAll - create it!
         res = conn.request(
