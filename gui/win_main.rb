@@ -226,7 +226,7 @@ class Openall_time_applet::Gui::Win_main
   def reload_timelogs
     return nil if @dont_reload or @gui["tvTimelogs"].destroyed?
     @gui["tvTimelogs"].model.clear
-    @args[:oata].ob.list(:Timelog, {"orderby" => [["timestamp", "desc"]]}) do |timelog|
+    @args[:oata].ob.list(:Timelog, "parent_timelog_id" => 0, "orderby" => [["timestamp", "desc"]]) do |timelog|
       begin
         tstamp_str = timelog.timestamp_str
       rescue => e
@@ -259,7 +259,7 @@ class Openall_time_applet::Gui::Win_main
     do_destroy = true
     
     @args[:oata].ob.list(:Timelog) do |timelog|
-      if timelog[:time].to_f > 0 or timelog[:time_transport].to_f > 0 or timelog[:sync_need].to_i == 1
+      if timelog.time_total > 0 or timelog.time_total(:transport => true) > 0 or timelog[:sync_need].to_i == 1
         timelog_found = timelog
         break
       end
@@ -305,9 +305,7 @@ class Openall_time_applet::Gui::Win_main
   
   #This method handles the "Timelog info"-frame. Hides, shows and updates the info in it.
   def timelog_info_trigger
-    if !@gui["expOverview"].expanded? and tlog = @args[:oata].timelog_active
-      @gui["labTimelogInfoDescr"].markup = "<b>#{Knj::Web.html(tlog[:descr])}</b>"
-      
+    if tlog = @args[:oata].timelog_active
       task = tlog.task
       if !task
         task_text = "[#{_("no task sat on the timelog")}]"
@@ -315,18 +313,20 @@ class Openall_time_applet::Gui::Win_main
         task_text = task.name
       end
       
-      @gui["labTimelogInfoTask"].markup = "<b>#{Knj::Web.html(task_text)}</b>"
+      @gui["labRunningTimelog"].label = tlog[:descr]
+      @gui["labRunningTask"].label = task_text
       
-      time_tracked = Knj::Strings.secs_to_human_time_str(@args[:oata].timelog_active_time_tracked + tlog[:time].to_i)
-      @gui["labTimelogInfoTime"].markup = "<b>#{Knj::Web.html(time_tracked)}</b>"
+      time_tracked = Knj::Strings.secs_to_human_time_str(@args[:oata].timelog_active_time_tracked + tlog.time_total)
       
-      @gui["frameTimelogInfo"].show_all
+      @gui["labRunningTime"].label = time_tracked
+      
+      @gui["txtDescr"].hide
+      @gui["cbTask"].hide
+      @gui["tableRunning"].show_all
     else
-      visible = @gui["frameTimelogInfo"].visible?
-      @gui["frameTimelogInfo"].hide
-      
-      #Resize to minimum height, so a big space isnt left.
-      @gui["window"].resize(@gui["window"].size[0], 1) if visible and !@gui["expOverview"].expanded?
+      @gui["txtDescr"].show
+      @gui["cbTask"].show
+      @gui["tableRunning"].hide
     end
   end
   
@@ -387,7 +387,7 @@ class Openall_time_applet::Gui::Win_main
       
       #Update time tracked.
       if timelog_id == act_timelog_id
-        secs = act_timelog[:time].to_i + @args[:oata].timelog_active_time_tracked
+        secs = act_timelog.time_total + @args[:oata].timelog_active_time_tracked
         iter[3] = "<b>#{Knj::Strings.secs_to_human_time_str(secs)}</b>"
         bold = true
       end

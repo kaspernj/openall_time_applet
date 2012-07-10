@@ -1,10 +1,12 @@
 class Openall_time_applet::Models::Timelog < Knj::Datarow
   has_one [
-    :Task
+    :Task,
+    [:Timelog, :parent_timelog_id, :parent_timelog]
   ]
   
   has_many [
-    {:class => :Timelog_logged_time, :col => :timelog_id, :method => :logged_times, :autodelete => true}
+    {:class => :Timelog_logged_time, :col => :timelog_id, :method => :logged_times, :autodelete => true},
+    {:class => :Timelog, :col => :parent_timelog_id, :method => :child_timelogs, :autodelete => true}
   ]
   
   def initialize(*args, &block)
@@ -19,6 +21,7 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
   def self.add(d)
     d.data[:time] = 0 if d.data[:time].to_s.strip.length <= 0
     d.data[:time_transport] = 0 if d.data[:time_transport].to_s.strip.length <= 0
+    d.data[:parent_timelog_id] = 0 if !d.data.key?(:parent_timelog_id)
   end
   
   #Pushes timelogs and time to OpenAll.
@@ -69,13 +72,29 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
     return descr
   end
   
+  #Returns the total amount of seconds for this timelog (and any sub-timelogs).
+  def time_total(args = {})
+    if args[:transport]
+      col = :time_transport
+    else
+      col = :time
+    end
+    
+    time = self[col].to_i
+    self.ob.list(:Timelog, "parent_timelog" => self) do |tlog|
+      time += tlog[col].to_i
+    end
+    
+    return time
+  end
+  
   #Returns the time as a human readable format.
   def time_as_human
-    return Knj::Strings.secs_to_human_time_str(self[:time])
+    return Knj::Strings.secs_to_human_time_str(self.time_total)
   end
   
   #Returns the transport-time as a human readable format.
   def time_transport_as_human
-    return Knj::Strings.secs_to_human_time_str(self[:time_transport])
+    return Knj::Strings.secs_to_human_time_str(self.time_total(:transport => true))
   end
 end

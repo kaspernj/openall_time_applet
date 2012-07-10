@@ -24,7 +24,7 @@ class Openall_time_applet
   class Models
     #Autoloader for subclasses.
     def self.const_missing(name)
-      require "../models/#{name.to_s.downcase}.rb"
+      require "#{File.dirname(__FILE__)}/../models/#{name.to_s.downcase}.rb"
       return Openall_time_applet::Models.const_get(name)
     end
   end
@@ -33,7 +33,7 @@ class Openall_time_applet
   class Gui
     #Autoloader for subclasses.
     def self.const_missing(name)
-      require "../gui/#{name.to_s.downcase}.rb"
+      require "#{File.dirname(__FILE__)}/../gui/#{name.to_s.downcase}.rb"
       return Openall_time_applet::Gui.const_get(name)
     end
   end
@@ -42,7 +42,7 @@ class Openall_time_applet
   def self.const_missing(name)
     namel = name.to_s.downcase
     tries = [
-      "../classes/#{namel}.rb"
+      "#{File.dirname(__FILE__)}/../classes/#{namel}.rb"
     ]
     tries.each do |try|
       if File.exists?(try)
@@ -89,7 +89,7 @@ class Openall_time_applet
     @ob = Knj::Objects.new(
       :datarow => true,
       :db => @db,
-      :class_path => "../models",
+      :class_path => "#{File.dirname(__FILE__)}/../models",
       :class_pre => "",
       :module => Openall_time_applet::Models
     )
@@ -175,7 +175,7 @@ class Openall_time_applet
   
   #Updates the database according to the db-schema.
   def update_db
-    require "../conf/db_schema.rb"
+    require "#{File.dirname(__FILE__)}/../conf/db_schema.rb"
     Knj::Db::Revision.new.init_db("debug" => false, "db" => @db, "schema" => Openall_time_applet::DB_SCHEMA)
   end
   
@@ -343,8 +343,30 @@ class Openall_time_applet
   def timelog_stop_tracking
     if @timelog_active
       secs_passed = Time.now.to_i - @timelog_active_time.to_i
-      @timelog_active.update(
-        :time => @timelog_active[:time].to_i + secs_passed,
+      
+      #Check if there has been logged time another day - if so, clone it and begin log on the clone instead.
+      if @timelog_active.timestamp.time.strftime("%Y-%m-%d") != Time.now.strftime("%Y-%m-%d")
+        timelog_use = @ob.get_by(:Timelog, {
+          "parent_timelog" => @timelog_active,
+          "timestamp_day" => Time.now
+        })
+        if !timelog_use
+          timelog_use = @ob.add(:Timelog, {
+            :task_id => @timelog_active[:task_id],
+            :parent_timelog_id => @timelog_active.id,
+            :timestamp => Time.now,
+            :descr => @timelog_active[:descr],
+            :transportdescription => @timelog_active[:transportdescription],
+            :workinternal => @timelog_active[:workinternal],
+            :timetype => @timelog_active[:timetype]
+          })
+        end
+      else
+        timelog_use = @timelog_active
+      end
+      
+      timelog_use.update(
+        :time => timelog_use[:time].to_i + secs_passed,
         :sync_need => 1
       )
       @timelog_logged_time[:timestamp_end] = Time.now
@@ -359,24 +381,6 @@ class Openall_time_applet
   #Sets a new timelog to track. Stops tracking of previous timelog if already tracking.
   def timelog_active=(timelog)
     begin
-      #Check if there has been logged time another day - if so, clone it and begin logging on the clone instead.
-      tlt = @ob.list(:Timelog_logged_time, {
-        "timelog" => timelog,
-        "timestamp_start_day_not" => Time.now,
-        "limit" => 1
-      })
-      if !tlt.empty?
-        timelog = @ob.add(:Timelog, {
-          :task_id => timelog[:task_id],
-          :timestamp => Time.now,
-          :descr => timelog[:descr],
-          :transportdescription => timelog[:transportdescription],
-          :workinternal => timelog[:workinternal],
-          :timetype => timelog[:timetype]
-        })
-        #raise sprintf(_("You have already logged on this timelog on %s"), tlt.first.timestamp_start.out)
-      end
-      
       self.timelog_stop_tracking
       @timelog_logged_time = @ob.add(:Timelog_logged_time, {:timelog_id => timelog.id})
       @timelog_active = timelog

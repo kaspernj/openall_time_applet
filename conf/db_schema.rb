@@ -33,6 +33,7 @@ Openall_time_applet::DB_SCHEMA = {
       "columns" => [
         {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
         {"name" => "task_id", "type" => "int"},
+        {"name" => "parent_timelog_id", "type" => "int", "null" => false},
         {"name" => "timestamp", "type" => "datetime"},
         {"name" => "time", "type" => "int"},
         {"name" => "time_sync", "type" => "varchar"},
@@ -48,7 +49,8 @@ Openall_time_applet::DB_SCHEMA = {
         {"name" => "sync_last", "type" => "datetime"}
       ],
       "indexes" => [
-        "task_id"
+        "task_id",
+        "parent_timelog_id"
       ]
     },
     "Timelog_logged_time" => {

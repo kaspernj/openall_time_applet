@@ -38,7 +38,7 @@ class Openall_time_applet::Gui::Trayicon
     end
     
     #Calculate minutes tracked and generate variables.
-    secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i
+    secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i + @args[:oata].timelog_active.time_total
     mins = (secs.to_f / 60.0)
     
     if mins >= 60
@@ -88,14 +88,14 @@ class Openall_time_applet::Gui::Trayicon
     menu = Gtk::Menu.new
     
     #Make a list of all timelogs in the menu.
-    @args[:oata].ob.list(:Timelog, {"orderby" => "id"}) do |timelog|
+    @args[:oata].ob.list(:Timelog, "parent_timelog_id" => 0, "orderby" => "id") do |timelog|
       label = timelog.descr_short
       
       #If this is the active timelog, make the label bold, by getting the label-child and using HTML-markup on it.
       if @args[:oata].timelog_active and @args[:oata].timelog_active.id == timelog.id
         mi = Gtk::ImageMenuItem.new(Gtk::Stock::MEDIA_RECORD)
         
-        secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i
+        secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i + timelog.time_total
         mins = (secs.to_f / 60.0).round(0)
         
         mi.children[0].markup = "<b>#{Knj::Web.html(label)} (#{mins})</b>"
