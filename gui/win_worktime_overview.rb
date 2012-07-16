@@ -9,7 +9,7 @@ class Openall_time_applet::Gui::Win_worktime_overview
     @gui.translate
     @gui.connect_signals{|h| method(h)}
     
-    @date = Knj::Datet.new
+    @date = Datet.new
     self.build_week
     
     @gui["window"].show_all
@@ -66,7 +66,7 @@ class Openall_time_applet::Gui::Win_worktime_overview
     
     #Draw all the days.
     stats[:days_total].keys.sort.each do |day_no|
-      date = Knj::Datet.in(Time.new(date.year, date.month, day_no))
+      date = Datet.in(Time.new(date.year, date.month, day_no))
       
       day_title = Gtk::Label.new
       day_title.markup = "<b>#{date.day_str(:short => true)} #{date.time.strftime("%d/%m")} - #{stats[:days_total][day_no][:first_time].time.strftime("%H:%M")}</b>"

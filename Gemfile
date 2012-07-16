@@ -8,6 +8,8 @@ gem "sqlite3"
 gem "gettext"
 gem "json"
 gem "rmagick"
+gem "datet"
+gem "http2"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

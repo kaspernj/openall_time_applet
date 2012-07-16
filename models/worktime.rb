@@ -18,7 +18,7 @@ class Openall_time_applet::Models::Worktime < Knj::Datarow
       save_hash = {
         :openall_uid => wt_d["uid"],
         :task_id => task.id,
-        :timestamp => Knj::Datet.in(wt_d["timestamp"]),
+        :timestamp => Datet.in(wt_d["timestamp"]),
         :worktime => Knj::Strings.human_time_str_to_secs(wt_d["worktime"]),
         :transporttime => Knj::Strings.human_time_str_to_secs(wt_d["transporttime"]),
         :comment => wt_d["comment"]

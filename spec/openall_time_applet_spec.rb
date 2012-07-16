@@ -8,7 +8,7 @@ describe "OpenallTimeApplet" do
   end
   
   it "should be able to clone timelogs" do
-    date = Knj::Datet.new
+    date = Datet.new
     date.days - 1
     
     timelog = $oata.ob.add(:Timelog, {
@@ -32,6 +32,11 @@ describe "OpenallTimeApplet" do
     
     timelogs = $oata.ob.list(:Timelog, "orderby" => "timestamp").to_a
     raise "Expected amount of timelogs to be 2 but it wasnt: #{timelogs.length}" if timelogs.length != 2
+    
+    #Or else it wont be possible to delete main timelog.
+    timelog.child_timelogs do |child_timelog|
+      child_timelog[:time] = 0
+    end
   end
   
   it "should automatically delete sub-timelogs" do

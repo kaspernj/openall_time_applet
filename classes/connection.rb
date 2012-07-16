@@ -4,7 +4,7 @@ require "json"
 class Openall_time_applet::Connection
   def initialize(args)
     @args = args
-    @http = Knj::Http2.new(
+    @http = Http2.new(
       :host => @args[:host],
       :port => @args[:port],
       :follow_redirects => false,
@@ -17,10 +17,10 @@ class Openall_time_applet::Connection
   
   def login
     #For some weird reason OpenAll seems to only accept multipart-post-requests??
-    @http.post_multipart("index.php?c=Auth&m=validateLogin", {"username" => @args[:username], "password" => @args[:password]})
+    @http.post_multipart(:url => "index.php?c=Auth&m=validateLogin", :post => {"username" => @args[:username], "password" => @args[:password]})
     
     #Verify login by reading dashboard HTML.
-    res = @http.get("index.php?c=Dashboard")
+    res = @http.get(:url => "index.php?c=Dashboard")
     
     if !res.body.match(/<ul\s*id="webticker"\s*>/) and !res.body.index("<a href=\"index.php?c=Dashboard&m=editDashboard\">") == nil
       tmp_path = "#{Knj::Os.tmpdir}/openall_login_debug.txt"
@@ -44,9 +44,9 @@ class Openall_time_applet::Connection
     
     #Send request to OpenAll via HTTP.
     if args[:post]
-      res = @http.post_multipart(args[:url], args[:post])
+      res = @http.post_multipart(:url => args[:url], :post => args[:post])
     else
-      res = @http.get(args[:url])
+      res = @http.get(:url => args[:url])
     end
     
     raise _("Empty body returned from OpenAll.") if res.body.to_s.strip.length <= 0

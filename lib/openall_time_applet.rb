@@ -2,12 +2,18 @@
 require "rubygems"
 
 #For secs-to-human-string (MySQL-format), model-framework, database-framework, options-framework, date-framework and more.
-if ENV["HOME"] == "/home/kaspernj" and File.exists?("/home/kaspernj/Dev/Ruby/knjrbfw")
-  #For development.
-  require "/home/kaspernj/Dev/Ruby/knjrbfw/lib/knjrbfw"
-else
-  require "knjrbfw"
+gems = ["wref", "datet", "http2", "knjrbfw"]
+gems.each do |gem|
+  fpath = "#{File.dirname(__FILE__)}/../../#{gem}/lib/#{gem}.rb"
+  if File.exists?(fpath)
+    puts "Require custom Gem-path: '#{fpath}'."
+    require fpath
+  else
+    puts "Require Gem normally: '#{gem}'."
+    require gem
+  end
 end
+
 
 require "sqlite3"
 require "gettext"
@@ -185,7 +191,7 @@ class Openall_time_applet
       loop do
         enabled = Knj::Strings.yn_str(Knj::Opts.get("reminder_enabled"), true, false)
         if enabled and !@reminder_next
-          @reminder_next = Knj::Datet.new
+          @reminder_next = Datet.new
           @reminder_next.mins + Knj::Opts.get("reminder_every_minute").to_i
         elsif enabled and @reminder_next and Time.now >= @reminder_next
           self.reminding_exec

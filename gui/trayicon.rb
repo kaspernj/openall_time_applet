@@ -39,7 +39,7 @@ class Openall_time_applet::Gui::Trayicon
     
     #Calculate minutes tracked and generate variables.
     secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i + @args[:oata].timelog_active.time_total
-    mins = (secs.to_f / 60.0)
+    mins = (secs.to_f / 60.0).floor
     
     if mins >= 60
       hours = mins / 60
