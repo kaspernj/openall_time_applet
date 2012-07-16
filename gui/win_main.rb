@@ -370,6 +370,11 @@ class Openall_time_applet::Gui::Win_main
     @gui["labTotal"].markup = "<b>#{_("Total hours:")}</b> #{Knj::Strings.secs_to_human_time_str(total_secs)}"
   end
   
+  def on_btnCancelPrepareTransfer_clicked
+    @gui["expOverview"].show
+    @gui["vboxPrepareTransfer"].hide
+  end
+  
   #This method is called, when editting starts in a description-, time- or task-cell. If it is the active timelog, then editting is canceled.
   def on_cell_editingStarted(renderer, editable, path, col_title)
     iter = @gui["tvTimelogs"].model.get_iter(path)
