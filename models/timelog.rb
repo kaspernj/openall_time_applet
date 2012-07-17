@@ -107,7 +107,7 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
   def descr_short
     descr = self[:descr].to_s.gsub("\n", " ").gsub(/\s{2,}/, " ")
     descr = Knj::Strings.shorten(descr, 20)
-    descr = "[#{_("no description")}]" if descr.to_s.strip.length <= 0
+    #descr = "[#{_("no description")}]" if descr.to_s.strip.length <= 0
     return descr
   end
   
@@ -115,7 +115,7 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
   def transport_descr_short
     descr = self[:transportdescription].to_s.gsub("\n", " ").gsub(/\s{2,}/, " ")
     descr = Knj::Strings.shorten(descr, 20)
-    descr = "[#{_("no description")}]" if descr.to_s.strip.length <= 0
+    #descr = "[#{_("no description")}]" if descr.to_s.strip.length <= 0
     return descr
   end
   

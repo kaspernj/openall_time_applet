@@ -4,7 +4,7 @@ class Openall_time_applet::Gui::Win_main
   def initialize(args)
     @args = args
     
-    @gui = Gtk::Builder.new.add("../glade/win_main.glade")
+    @gui = Gtk::Builder.new.add("#{File.dirname(__FILE__)}/../glade/win_main.glade")
     @gui.translate
     @gui.connect_signals{|h| method(h)}
     
@@ -591,7 +591,11 @@ class Openall_time_applet::Gui::Win_main
     end
     
     return nil if Knj::Gtk2.msgbox(_("Do you want to remove this timelog?"), "yesno") != "yes"
-    @args[:oata].ob.delete(tlog)
+    begin
+      @args[:oata].ob.delete(tlog)
+    rescue => e
+      Knj::Gtk2.msgbox(sprintf(_("Could not delete the timelog: %s"), e.message))
+    end
   end
   
   def on_btnPlus_clicked

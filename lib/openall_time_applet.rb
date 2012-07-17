@@ -314,11 +314,6 @@ class Openall_time_applet
     end
   end
   
-  #Shows the sync overview, which must be seen before the actual sync.
-  def show_prepare_sync
-    Openall_time_applet::Gui::Win_sync_overview.new(:oata => self)
-  end
-  
   #Refreshes task-cache, create missing worktime from timelogs and push tracked time to timelogs. Shows a status-window while doing so.
   def sync_real
     sw = Knj::Gtk2::StatusWindow.new

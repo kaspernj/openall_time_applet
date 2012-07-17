@@ -15,6 +15,11 @@ class Openall_time_applet::Models::Worktime < Knj::Datarow
       found << wt_d["uid"]
       task = self.ob.get_by(:Task, {"openall_uid" => wt_d["task_uid"]})
       
+      if !task
+        $stderr.puts sprintf(_("Task with UID '%s' was not found."), wt_d["task_uid"]) + " - " + sprintf(_("Skipping worktime with UID %s"), wt_d["uid"])
+        next
+      end
+      
       save_hash = {
         :openall_uid => wt_d["uid"],
         :task_id => task.id,
