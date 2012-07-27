@@ -6,7 +6,7 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
   
   has_many [
     {:class => :Timelog_logged_time, :col => :timelog_id, :method => :logged_times, :autodelete => true},
-    {:class => :Timelog, :col => :parent_timelog_id, :method => :child_timelogs, :autodelete => true}
+    {:class => :Timelog, :col => :parent_timelog_id, :method => :child_timelogs, :autozero => true}
   ]
   
   def initialize(*args, &block)
@@ -22,38 +22,6 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
     d.data[:time] = 0 if d.data[:time].to_s.strip.length <= 0
     d.data[:time_transport] = 0 if d.data[:time_transport].to_s.strip.length <= 0
     d.data[:parent_timelog_id] = 0 if !d.data.key?(:parent_timelog_id)
-  end
-  
-  #This method is called from objects-framework when it wants to delete this object. It checks for various cases where the timelog shouldnt be deleted.
-  def delete
-    #Ensure that child timelogs with logged time do not get deleted automatically!
-    self.child_timelogs do |child_timelog|
-      if child_timelog.time_total > 0
-        raise sprintf(_("Child timelog '%1$s' (%2$s) has logged time (%3$s) and this timelog cannot be deleted."), child_timelog[:descr], child_timelog.id, child_timelog.time_as_human)
-      end
-      
-      if child_timelog.time_total(:transport => true) > 0
-        raise _("A child timelog has logged transport time and this timelog cannot be deleted.")
-      end
-    end
-  end
-  
-  #This method proxies updates to child timelogs as well (not time though).
-  def update(hash)
-    #Update the data on this object.
-    super(hash)
-    
-    #Certain data should be updated on child timelogs as well.
-    hash.each do |key, val|
-      key = key.to_sym
-      
-      case key
-        when :descr, :task_id, :timetype, :transportdescription, :travelfixed, :workinternal, :sync_need
-          self.child_timelogs do |child_timelog|
-            child_timelog[key] = val
-          end
-      end
-    end
   end
   
   #Pushes timelogs and time to OpenAll.

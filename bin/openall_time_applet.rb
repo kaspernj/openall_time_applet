@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby1.9
+#!/usr/bin/env ruby-1.9.2-head-stable
 
 Dir.chdir(File.dirname(__FILE__))
 require "../lib/openall_time_applet.rb"

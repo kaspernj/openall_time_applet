@@ -299,7 +299,7 @@ class Openall_time_applet::Gui::Win_main
     @gui["tvTimelogsPrepareTransfer"].model.clear
     @timelogs_sync_count = 0
     
-    @args[:oata].ob.list(:Timelog, {"sync_need" => 1, "task_id_not" => ["", 0], "orderby" => "timestamp"}) do |timelog|
+    @args[:oata].ob.list(:Timelog, {"sync_need" => 1, "orderby" => "timestamp"}) do |timelog|
       #Read time and transport from timelog.
       time = timelog[:time].to_i
       transport = timelog[:time_transport].to_i
@@ -400,7 +400,7 @@ class Openall_time_applet::Gui::Win_main
   def reload_timelogs
     return nil if @dont_reload or @gui["tvTimelogs"].destroyed?
     @gui["tvTimelogs"].model.clear
-    @args[:oata].ob.list(:Timelog, "parent_timelog_id" => 0, "orderby" => [["timestamp", "desc"]]) do |timelog|
+    @args[:oata].ob.list(:Timelog, "orderby" => [["timestamp", "desc"]]) do |timelog|
       begin
         tstamp_str = timelog.timestamp_str
       rescue => e

@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby1.9.1
+#!/usr/bin/env ruby-1.9.2-head-stable
 
 #This custom script is to manipulate the tray-text for Gnome Shell.
 

@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Openall_time_applet\n"
-"POT-Creation-Date: 2012-06-27 14:25+0100\n"
-"PO-Revision-Date: 2012-06-27 14:26+0100\n"
+"POT-Creation-Date: 2012-07-27 10:52+0100\n"
+"PO-Revision-Date: 2012-07-27 10:54+0100\n"
 "Last-Translator: Kasper Johansen <k@spernj.org>\n"
 "Language-Team: Kasper Johansen <k@spernj.org>\n"
 "Language: \n"
@@ -60,13 +60,9 @@ msgstr "Lørday"
 msgid "Sunday"
 msgstr "Søndag"
 
-#: gui/trayicon.rb:92
-msgid "Track: %s"
-msgstr "Følg: %s"
-
-#: gui/trayicon.rb:116
-msgid "%s minutes"
-msgstr "%s minutter"
+#: gui/trayicon.rb:117
+msgid "New"
+msgstr "Ny"
 
 #: gui/win_preferences.rb:30
 msgid "Black"
@@ -80,40 +76,48 @@ msgstr "Grøn (Casalogic)"
 msgid "White"
 msgstr "Hvid"
 
-#: gui/win_preferences.rb:42
+#: gui/win_preferences.rb:46
 msgid "The OpenAll-settings was saved."
 msgstr "OpenAll-indstillinger blev gemt."
 
-#: gui/win_preferences.rb:47
+#: gui/win_preferences.rb:51
 msgid "Reminder-minute was not numeric."
 msgstr "Påmindelses-minutter var ikke et gyldigt tal."
 
-#: gui/win_preferences.rb:57
+#: gui/win_preferences.rb:61
 msgid "The reminder-settings was saved."
 msgstr "Påmindelses-indstillinger blev gemt."
 
-#: gui/win_preferences.rb:64
+#: gui/win_preferences.rb:68
 msgid "The tray-settings was saved."
 msgstr "Tray-indstillinger blev gemt."
 
-#: gui/win_preferences.rb:70
+#: gui/win_preferences.rb:74
 msgid "Connecting and logging in..."
 msgstr "Forbinder og logger ind..."
 
-#: gui/win_preferences.rb:78
+#: gui/win_preferences.rb:82
 msgid "Getting task-list."
 msgstr "Henter opgave-liste."
 
-#: gui/win_preferences.rb:81
+#: gui/win_preferences.rb:85
 msgid "Got %s tasks."
 msgstr "Hentet %s opgaver."
 
-#: gui/win_preferences.rb:89
-#: lib/openall_time_applet.rb:301
-#: lib/openall_time_applet.rb:332
-#: lib/openall_time_applet.rb:384
+#: gui/win_preferences.rb:93
+#: lib/openall_time_applet.rb:310
+#: lib/openall_time_applet.rb:340
+#: lib/openall_time_applet.rb:396
 msgid "Error"
 msgstr "Fejl"
+
+#: gui/win_preferences.rb:110
+msgid "The interval was not numeric."
+msgstr "Intervallet var ikke et tal."
+
+#: gui/win_preferences.rb:119
+msgid "The auto. sync. preferences was saved."
+msgstr "Auto synk. indstillingerne blev gemt."
 
 #: gui/win_worktime_overview.rb:27
 msgid "Week %s"
@@ -124,149 +128,197 @@ msgid "No worktimes was found that week."
 msgstr "Der blev ikke fundet nogle arbejdstimer i denne uge."
 
 #: gui/win_main.rb:15
-#: gui/win_sync_overview.rb:14
+#: gui/win_main.rb:207
 msgid "None"
 msgstr "Ingen"
 
 #: gui/win_main.rb:18
-#: gui/win_main.rb:253
-#: gui/win_sync_overview.rb:17
+#: gui/win_main.rb:210
+#: gui/win_main.rb:508
+#: gui/win_main.rb:528
+#: gui/win_main.rb:538
 msgid "Choose:"
 msgstr "Vælg:"
 
-#: gui/win_main.rb:30
-#: gui/win_sync_overview.rb:27
+#: gui/win_main.rb:58
+#: gui/win_main.rb:220
 msgid "ID"
 msgstr "ID"
 
-#: gui/win_main.rb:32
-#: gui/win_sync_overview.rb:28
+#: gui/win_main.rb:60
+#: gui/win_main.rb:221
 msgid "Description"
 msgstr "Beskrivelse"
 
-#: gui/win_main.rb:37
-#: gui/win_sync_overview.rb:29
+#: gui/win_main.rb:65
+#: gui/win_main.rb:222
 msgid "Timestamp"
 msgstr "Tidsstempel"
 
-#: gui/win_main.rb:42
-#: gui/win_sync_overview.rb:30
+#: gui/win_main.rb:70
+#: gui/win_main.rb:223
 msgid "Time"
 msgstr "Tid"
 
-#: gui/win_main.rb:47
-#: gui/win_sync_overview.rb:31
+#: gui/win_main.rb:75
+#: gui/win_main.rb:224
 msgid "Transport"
 msgstr "Transport"
 
-#: gui/win_main.rb:52
-#: gui/win_sync_overview.rb:32
+#: gui/win_main.rb:80
+#: gui/win_main.rb:225
 msgid "Length"
 msgstr "Længde"
 
-#: gui/win_main.rb:57
+#: gui/win_main.rb:85
 msgid "Descr."
 msgstr "Beskr."
 
-#: gui/win_main.rb:62
+#: gui/win_main.rb:90
 msgid "Costs"
 msgstr "Omkost."
 
-#: gui/win_main.rb:67
+#: gui/win_main.rb:95
 msgid "Fixed"
 msgstr "Fikset"
 
-#: gui/win_main.rb:71
-#: gui/win_sync_overview.rb:40
+#: gui/win_main.rb:99
+#: gui/win_main.rb:233
 msgid "Int. work"
 msgstr "Int. arbejde"
 
-#: gui/win_main.rb:75
-#: gui/win_sync_overview.rb:44
+#: gui/win_main.rb:103
+#: gui/win_main.rb:237
 msgid "Sync?"
 msgstr "Synk?"
 
-#: gui/win_main.rb:79
-#: gui/win_sync_overview.rb:48
+#: gui/win_main.rb:107
+#: gui/win_main.rb:241
 msgid "Task"
 msgstr "Opgave"
 
-#: gui/win_main.rb:94
+#: gui/win_main.rb:122
 msgid "You cannot edit the time for the active timelog."
 msgstr "Du kan ikke redigere tid for den aktive tidslog."
 
-#: gui/win_main.rb:198
-msgid "The timelog '%s' has not been synced. Are you sure you want to quit?"
-msgstr "Tidsloggen '%s' er ikke blevet synkroniseret. Er du sikker på, at du vil afslutte?"
-
-#: gui/win_main.rb:266
-msgid "Stop"
-msgstr "Stop"
-
-#: gui/win_main.rb:269
-msgid "Start"
-msgstr "Start"
-
-#: gui/win_main.rb:319
-msgid "Please choose a timelog to delete."
-msgstr "Vælg venligst en tidslog at slette."
-
-#: gui/win_main.rb:323
-msgid "Do you want to remove this timelog?"
-msgstr "Vil du fjerne denne tidslogning?"
-
-#: gui/win_sync_overview.rb:9
+#: gui/win_main.rb:202
 msgid "Transfer"
 msgstr "Overfør"
 
-#: gui/win_sync_overview.rb:33
+#: gui/win_main.rb:226
 msgid "Transport descr."
 msgstr "Transport beskr."
 
-#: gui/win_sync_overview.rb:34
+#: gui/win_main.rb:227
 msgid "Transport costs"
 msgstr "Transport omkostninger"
 
-#: gui/win_sync_overview.rb:36
+#: gui/win_main.rb:229
 msgid "Fixed travel"
 msgstr "Fikset rejse"
 
-#: gui/win_sync_overview.rb:53
+#: gui/win_main.rb:246
 msgid "Sync time"
 msgstr "Synk tid"
 
-#: gui/win_sync_overview.rb:129
+#: gui/win_main.rb:348
 msgid "There is nothing to sync at this time."
 msgstr "Der er intet at synce på nuværende tidspunkt."
 
-#: lib/openall_time_applet.rb:97
+#: gui/win_main.rb:385
+msgid "You cannot edit this on the active timelog."
+msgstr "Du kan ikke redigere den aktive tidslog."
+
+#: gui/win_main.rb:443
+msgid "The timelog '%s' has not been synced. Are you sure you want to quit?"
+msgstr "Tidsloggen '%s' er ikke blevet synkroniseret. Er du sikker på, at du vil afslutte?"
+
+#: gui/win_main.rb:521
+msgid "Stop"
+msgstr "Stop"
+
+#: gui/win_main.rb:535
+msgid "Start"
+msgstr "Start"
+
+#: gui/win_main.rb:589
+msgid "Please choose a timelog to delete."
+msgstr "Vælg venligst en tidslog at slette."
+
+#: gui/win_main.rb:593
+#: spec/openall_time_applet_spec.rb:54
+#: spec/openall_time_applet_spec.rb:83
+msgid "Do you want to remove this timelog?"
+msgstr "Vil du fjerne denne tidslogning?"
+
+#: gui/win_main.rb:597
+msgid "Could not delete the timelog: %s"
+msgstr "Kunne ikke slette tidslog: %s"
+
+#: lib/openall_time_applet.rb:103
 msgid "not set"
 msgstr "ikke sat"
 
-#: lib/openall_time_applet.rb:202
+#: lib/openall_time_applet.rb:211
 msgid "Tracking task: %s"
 msgstr "Følger opgave: %s"
 
-#: lib/openall_time_applet.rb:282
+#: lib/openall_time_applet.rb:291
 msgid "Updating organisation-cache."
 msgstr "Opdaterer organisations-cache."
 
-#: lib/openall_time_applet.rb:286
+#: lib/openall_time_applet.rb:295
 msgid "Updating task-cache."
 msgstr "Opdaterer opgave-cache."
 
-#: lib/openall_time_applet.rb:290
-#: lib/openall_time_applet.rb:324
+#: lib/openall_time_applet.rb:299
+#: lib/openall_time_applet.rb:332
 msgid "Updating worktime-cache."
 msgstr "Opdaterer arbejdstids-cache."
 
-#: lib/openall_time_applet.rb:320
+#: lib/openall_time_applet.rb:324
 msgid "Pushing time-updates."
 msgstr "Sender tids-opdateringer."
 
 #: lib/openall_time_applet.rb:328
+msgid "Update task-cache."
+msgstr "Opdaterer opgave-cache."
+
+#: lib/openall_time_applet.rb:336
 msgid "Done"
 msgstr "Færdig"
+
+#: lib/openall_time_applet.rb:429
+msgid "Disabled automatic synchronization."
+msgstr "Slået automatisk synkronation fra."
+
+#: lib/openall_time_applet.rb:433
+msgid "Restarted automatic sync. to run every %s minutes."
+msgstr "Genstartet automatisk synk. til at køre hvert %s minut."
+
+#: lib/openall_time_applet.rb:448
+msgid "Synchronizing organisations."
+msgstr "Synkroniserer organisationer."
+
+#: lib/openall_time_applet.rb:451
+msgid "Synchronizing worktime."
+msgstr "Synkroniserer arbejdstid."
+
+#: lib/openall_time_applet.rb:454
+msgid "Automatic synchronization done."
+msgstr "Automatisk synkronation færdig."
+
+#: lib/openall_time_applet.rb:456
+msgid "Error while auto-syncing: %s"
+msgstr "Fejl ved auto-synk: %s"
+
+#: models/worktime.rb:19
+msgid "Task with UID '%s' was not found."
+msgstr "Opgave med UID '%s' blev ikke fundet."
+
+#: models/worktime.rb:19
+msgid "Skipping worktime with UID %s"
+msgstr "Springer over arbejdstid med UID %s"
 
 #: glade/win_worktime_overview.glade:7
 msgid "Week status"
@@ -329,6 +381,18 @@ msgstr "Tekst farve"
 msgid "Tray"
 msgstr "Tray"
 
+#: glade/win_preferences.glade:500
+msgid "Do automatic syncronization of data from OpenAll"
+msgstr "Lav automatisk synkronation af data med OpenAll"
+
+#: glade/win_preferences.glade:516
+msgid "Interval (minutes)"
+msgstr "Interval (minutter)"
+
+#: glade/win_preferences.glade:598
+msgid "Automatic sync."
+msgstr "Automatisk synk."
+
 #: glade/win_main.glade:17
 msgid "OpenAll Time Applet"
 msgstr "OpenAll Tids Applet"
@@ -341,39 +405,39 @@ msgstr "_Tracker"
 msgid "Week view"
 msgstr "Uge oversigt"
 
-#: glade/win_main.glade:140
+#: glade/win_main.glade:70
+msgid "Synchronize static data"
+msgstr "Synkroniserer statisk data."
+
+#: glade/win_main.glade:154
 msgid "Switch"
 msgstr "Switch"
 
-#: glade/win_main.glade:161
+#: glade/win_main.glade:182
 msgid "<b>Description</b>"
 msgstr "<b>Beskrivelse</b>"
 
-#: glade/win_main.glade:222
+#: glade/win_main.glade:243
 msgid "+"
 msgstr "+"
 
-#: glade/win_main.glade:237
+#: glade/win_main.glade:258
 msgid "-"
 msgstr "-"
 
-#: glade/win_main.glade:263
+#: glade/win_main.glade:285
+msgid "Prepare _sync"
+msgstr "Forbryd _synk."
+
+#: glade/win_main.glade:312
 msgid "Overview"
 msgstr "Oversigt"
 
-#: glade/win_main.glade:280
-msgid "_Sync"
-msgstr "_Sync"
-
-#: glade/win_sync_overview.glade:7
-msgid "Prepare transfer"
-msgstr "Forbered overførsel"
-
-#: glade/win_sync_overview.glade:94
+#: glade/win_main.glade:420
 msgid "<b>Prepare transfer</b>"
 msgstr "<b>Forbered overførsel</b>"
 
-#: glade/win_sync_overview.glade:110
+#: glade/win_main.glade:436
 msgid "[totals]"
 msgstr "[totaler]"
 
@@ -384,6 +448,15 @@ msgstr "Tidslog liste"
 #: glade/win_overview.glade:55
 msgid "<b>Timelogs</b>"
 msgstr "<b>Tidslogs</b>"
+
+#~ msgid "Track: %s"
+#~ msgstr "Følg: %s"
+
+#~ msgid "%s minutes"
+#~ msgstr "%s minutter"
+
+#~ msgid "_Sync"
+#~ msgstr "_Sync"
 
 #~ msgid "Could not log in."
 #~ msgstr "Kunne ikke logge ind."
@@ -414,9 +487,6 @@ msgstr "<b>Tidslogs</b>"
 
 #~ msgid "You have entered an invalid timestamp."
 #~ msgstr "Du har indtastet et ugyldigt tidsstempel."
-
-#~ msgid "Synchronize"
-#~ msgstr "Synkroniser"
 
 #~ msgid "Time was not numeric for: '%s'."
 #~ msgstr "Tid var ikke numerisk for: '%s'."
