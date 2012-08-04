@@ -283,7 +283,7 @@ class Openall_time_applet
   end
   
   #Synchronizes organisations, tasks and worktimes.
-  def sync_static(args = nil)
+  def sync_static(args = {})
     sw = Knj::Gtk2::StatusWindow.new("transient_for" => args["transient_for"])
     
     return Knj::Thread.new do
@@ -467,6 +467,22 @@ class Openall_time_applet
     
     if win_main
       win_main.gui["statusbar"].push(0, newstatus)
+    end
+  end
+  
+  def trayicon_timelogs
+    yielded_titles = {}
+    
+    #Make a list of all timelogs in the menu.
+    @ob.list(:Timelog, "parent_timelog_id" => 0, "orderby" => "descr") do |timelog|
+      task_id = timelog[:task_id].to_i
+      yielded_titles[task_id] = {} if !yielded_titles.key?(task_id)
+      
+      title = timelog.descr_short.strip.downcase
+      next if yielded_titles[task_id].key?(title)
+      yielded_titles[task_id][title] = true
+      
+      yield(timelog)
     end
   end
 end

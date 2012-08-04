@@ -7,6 +7,7 @@ class Openall_time_applet::Gui::Win_preferences
     @gui = Gtk::Builder.new.add("../glade/win_preferences.glade")
     @gui.translate
     @gui.connect_signals{|h| method(h)}
+    @gui["window"].icon = "#{File.dirname(__FILE__)}/../gfx/icon_time_black.png"
     
     self.load_values
     
@@ -47,7 +48,7 @@ class Openall_time_applet::Gui::Win_preferences
   end
   
   def on_btnReminderSave_clicked
-    if !Knj::Php.is_numeric(@gui["txtReminderEveryMinute"].text)
+    if !(Float(@gui["txtReminderEveryMinute"].text) rescue false)
       Knj::Gtk2.msgbox(_("Reminder-minute was not numeric."))
       return nil
     end
@@ -106,7 +107,7 @@ class Openall_time_applet::Gui::Win_preferences
   
   def on_btnAutoSyncSave_clicked
     interval = @gui["txtAutoSyncInterval"].text
-    if !Knj::Php.is_numeric(interval)
+    if !(Float(interval) rescue false)
       Knj::Gtk2.msgbox(_("The interval was not numeric."))
       return false
     end

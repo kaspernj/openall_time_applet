@@ -8,6 +8,7 @@ class Openall_time_applet::Gui::Win_worktime_overview
     @gui = Gtk::Builder.new.add("../glade/win_worktime_overview.glade")
     @gui.translate
     @gui.connect_signals{|h| method(h)}
+    @gui["window"].icon = "#{File.dirname(__FILE__)}/../gfx/icon_time_black.png"
     
     @date = Datet.new
     self.build_week

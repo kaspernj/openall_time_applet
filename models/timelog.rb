@@ -28,26 +28,28 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
   def self.push_time_updates(d, args)
     args[:oata].oa_conn do |conn|
       #Go through timelogs that needs syncing and has a task set.
-      self.ob.list(:Timelog, {"sync_need" => 1, "task_id_not" => ["", 0]}) do |timelog|
+      self.ob.list(:Timelog, "sync_need" => 1, "task_id_not" => ["", 0]) do |timelog|
         secs_sum = timelog[:time_sync].to_i + timelog[:time_transport].to_i
         next if secs_sum <= 0 or !timelog.task
+        
+        post_hash = {
+          :task_uid => timelog.task[:openall_uid].to_i,
+          :comment => timelog[:descr],
+          :worktime => Knj::Strings.secs_to_human_time_str(timelog[:time_sync]),
+          :workinternal => timelog[:workinternal],
+          :timestamp => timelog[:timestamp],
+          :timetype => timelog[:timetype],
+          :transporttime => Knj::Strings.secs_to_human_time_str(timelog[:time_transport]),
+          :transportlength => timelog[:transportlength].to_i,
+          :transportcosts => timelog[:transportcosts].to_i,
+          :transportdescription => timelog[:transportdescription],
+          :travelfixed => timelog[:travelfixed]
+        }
         
         #The timelog has not yet been created in OpenAll - create it!
         res = conn.request(
           :method => :createWorktime,
-          :post => {
-            :task_uid => timelog.task[:openall_uid].to_i,
-            :comment => timelog[:descr],
-            :worktime => Knj::Strings.secs_to_human_time_str(timelog[:time]),
-            :workinternal => timelog[:workinternal],
-            :timestamp => timelog[:timestamp],
-            :timetype => timelog[:timetype],
-            :transporttime => Knj::Strings.secs_to_human_time_str(timelog[:time_transport]),
-            :transportlength => timelog[:transportlength].to_i,
-            :transportcosts => timelog[:transportcosts].to_i,
-            :transportdescription => timelog[:transportdescription],
-            :travelfixed => timelog[:travelfixed]
-          }
+          :post => post_hash
         )
         
         parent_timelog = timelog.parent_timelog

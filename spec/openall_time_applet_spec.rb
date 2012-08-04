@@ -102,6 +102,15 @@ describe "OpenallTimeApplet" do
     raise "Timelog was not deleted." if !timelog.deleted?
   end
   
+  it "should only return a specific amount of timelogs for tray-icon" do
+    count = 0
+    $oata.trayicon_timelogs do |timelog|
+      count += 1
+    end
+    
+    print "Count: #{count}\n"
+  end
+  
   it "should remove the temp db" do
     File.unlink($tmp_path) if File.exists?($tmp_path)
   end

@@ -60,10 +60,10 @@ class Openall_time_applet::Gui::Trayicon
     
     #Generate image.
     require "RMagick"
-    canvas = Magick::Image.new(53, 53){
+    canvas = Magick::Image.new(53, 53) do
       self.background_color = "transparent"
       self.format = "png"
-    }
+    end
     
     color = "#a1a80a" if color == "green_casalogic"
     
@@ -86,9 +86,7 @@ class Openall_time_applet::Gui::Trayicon
   
   def on_statusicon_rightclick(tray, button, time)
     menu = Gtk::Menu.new
-    
-    #Make a list of all timelogs in the menu.
-    @args[:oata].ob.list(:Timelog, "parent_timelog_id" => 0, "orderby" => "id") do |timelog|
+    @args[:oata].trayicon_timelogs do |timelog|
       label = timelog.descr_short
       
       #If this is the active timelog, make the label bold, by getting the label-child and using HTML-markup on it.
