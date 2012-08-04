@@ -469,7 +469,7 @@ class Openall_time_applet
     yielded_titles = {}
     
     #Make a list of all timelogs in the menu.
-    @ob.list(:Timelog, "parent_timelog_id" => 0, "orderby" => "descr") do |timelog|
+    @ob.list(:Timelog, "orderby" => "descr") do |timelog|
       task_id = timelog[:task_id].to_i
       yielded_titles[task_id] = {} if !yielded_titles.key?(task_id)
       
