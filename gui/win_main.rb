@@ -147,7 +147,7 @@ class Openall_time_applet::Gui::Win_main
         10 => {:col => :sync_need},
         11 => {
           :col => :task_id,
-          :value_callback => lambda{ |data|
+          :value_callback => lambda{|data|
             task = @args[:oata].ob.get_by(:Task, {"title" => data[:value]})
             
             if !task
@@ -156,7 +156,7 @@ class Openall_time_applet::Gui::Win_main
               return task.id
             end
           },
-          :value_set_callback => proc{ |data| data[:model].task_name }
+          :value_set_callback => proc{|data| data[:model].task_name }
         }
       }
     )

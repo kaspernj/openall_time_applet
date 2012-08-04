@@ -97,12 +97,7 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
       col = :time
     end
     
-    time = self[col].to_i
-    self.ob.list(:Timelog, "parent_timelog" => self) do |tlog|
-      time += tlog[col].to_i
-    end
-    
-    return time
+    return self[col].to_i
   end
   
   #Returns the time as a human readable format.

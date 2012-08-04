@@ -349,29 +349,8 @@ class Openall_time_applet
     if @timelog_active
       secs_passed = Time.now.to_i - @timelog_active_time.to_i
       
-      #Check if there has been logged time another day - if so, clone it and begin log on the clone instead.
-      if @timelog_active.timestamp.time.strftime("%Y-%m-%d") != Time.now.strftime("%Y-%m-%d")
-        timelog_use = @ob.get_by(:Timelog, {
-          "parent_timelog" => @timelog_active,
-          "timestamp_day" => Time.now
-        })
-        if !timelog_use
-          timelog_use = @ob.add(:Timelog, {
-            :task_id => @timelog_active[:task_id],
-            :parent_timelog_id => @timelog_active.id,
-            :timestamp => Time.now,
-            :descr => @timelog_active[:descr],
-            :transportdescription => @timelog_active[:transportdescription],
-            :workinternal => @timelog_active[:workinternal],
-            :timetype => @timelog_active[:timetype]
-          })
-        end
-      else
-        timelog_use = @timelog_active
-      end
-      
-      timelog_use.update(
-        :time => timelog_use[:time].to_i + secs_passed,
+      @timelog_active.update(
+        :time => @timelog_active[:time].to_i + secs_passed,
         :sync_need => 1
       )
       @timelog_logged_time[:timestamp_end] = Time.now
@@ -385,10 +364,27 @@ class Openall_time_applet
   
   #Sets a new timelog to track. Stops tracking of previous timelog if already tracking.
   def timelog_active=(timelog)
+    timelog_use = @ob.get_by(:Timelog, {
+      "task_id" => timelog[:task_id],
+      "descr" => timelog[:descr],
+      "timestamp_day" => Time.now
+    })
+    if !timelog_use
+      timelog_use = @ob.add(:Timelog, {
+        :task_id => timelog[:task_id],
+        :parent_timelog_id => timelog.id,
+        :timestamp => Time.now,
+        :descr => timelog[:descr],
+        :transportdescription => timelog[:transportdescription],
+        :workinternal => timelog[:workinternal],
+        :timetype => timelog[:timetype]
+      })
+    end
+    
     begin
       self.timelog_stop_tracking
-      @timelog_logged_time = @ob.add(:Timelog_logged_time, {:timelog_id => timelog.id})
-      @timelog_active = timelog
+      @timelog_logged_time = @ob.add(:Timelog_logged_time, :timelog_id => timelog_use.id)
+      @timelog_active = timelog_use
       @timelog_active_time = Time.new
       
       @events.call(:timelog_active_changed)
@@ -433,13 +429,12 @@ class Openall_time_applet
     self.status = sprintf(_("Restarted automatic sync. to run every %s minutes."), Knj::Locales.number_out(interval, 1))
     
     #Start new timeout.
-    @autosync_timeout = Gtk.timeout_add(interval_msecs) do
-      if !@sync_thread
-        @sync_thread = Knj::Thread.new(&self.method(:run_autosync))
-      end
-      
-      true
-    end
+    @autosync_timeout = Gtk.timeout_add(interval_msecs, &self.method(:gtk_timeout))
+  end
+  
+  def gtk_timeout
+    @sync_thread = Knj::Thread.new(&self.method(:run_autosync)) if !@sync_thread
+    true
   end
   
   #This method is executing the automatic synchronization.
