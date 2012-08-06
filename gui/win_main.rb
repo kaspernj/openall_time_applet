@@ -17,7 +17,7 @@ class Openall_time_applet::Gui::Win_main
     iter[1] = 0.to_s
     
     tasks = [_("Choose:")]
-    @args[:oata].ob.list(:Task, {"orderby" => "title"}) do |task|
+    @args[:oata].ob.list(:Task, "orderby" => "title") do |task|
       iter = task_ls.append
       iter[0] = task[:title]
       iter[1] = task.id.to_s
@@ -26,25 +26,14 @@ class Openall_time_applet::Gui::Win_main
     
     
     #Set up completion for description entry.
-    ec = Gtk::EntryCompletion.new
-    ec.model = Gtk::ListStore.new(String)
-    ec.text_column = 0
-    @gui["txtDescr"].completion = ec
+    @descr_ec = Gtk::EntryCompletion.new
+    @descr_ec.model = Gtk::ListStore.new(String)
+    @descr_ec.text_column = 0
+    @gui["txtDescr"].completion = @descr_ec
+    self.reload_descr_completion
     
-    added = {}
-    @args[:oata].ob.list(:Worktime, {"orderby" => "timestamp"}) do |worktime|
-      next if added.key?(worktime[:comment])
-      added[worktime[:comment]] = true
-      ec.model.append[0] = worktime[:comment]
-    end
     
-    @args[:oata].ob.list(:Timelog, {"orderby" => "descr"}) do |timelog|
-      next if added.key?(timelog[:descr])
-      added[timelog[:descr]] = true
-      ec.model.append[0] = timelog[:descr]
-    end
-    
-    ec.signal_connect("match-selected") do |me, model, iter|
+    @descr_ec.signal_connect("match-selected") do |me, model, iter|
       text = model.get_value(iter, 0)
       me.entry.text = text
       true
@@ -295,6 +284,24 @@ class Openall_time_applet::Gui::Win_main
     @gui["window"].resize(width, 1)
   end
   
+  #Reloads the suggestions for the description-entry-completion.
+  def reload_descr_completion
+    added = {}
+    @descr_ec.model.clear
+    
+    @args[:oata].ob.list(:Worktime, "orderby" => "timestamp") do |worktime|
+      next if added.key?(worktime[:comment])
+      added[worktime[:comment]] = true
+      @descr_ec.model.append[0] = worktime[:comment]
+    end
+    
+    @args[:oata].ob.list(:Timelog, "orderby" => "descr") do |timelog|
+      next if added.key?(timelog[:descr])
+      added[timelog[:descr]] = true
+      @descr_ec.model.append[0] = timelog[:descr]
+    end
+  end
+  
   def reload_timelogs_preparetransfer
     return nil if @dont_reload_sync or @gui["tvTimelogsPrepareTransfer"].destroyed?
     @gui["tvTimelogsPrepareTransfer"].model.clear
@@ -399,6 +406,8 @@ class Openall_time_applet::Gui::Win_main
   
   #Removes all timelogs from the treeview and adds them again. Does nothing if the 'dont_reload'-variable is set.
   def reload_timelogs
+    self.reload_descr_completion
+    
     return nil if @dont_reload or @gui["tvTimelogs"].destroyed?
     @gui["tvTimelogs"].model.clear
     @args[:oata].ob.list(:Timelog, "orderby" => ["task_id", "descr", "timestamp"]) do |timelog|
@@ -493,6 +502,8 @@ class Openall_time_applet::Gui::Win_main
       @args[:oata].timelog_stop_tracking
       @gui["txtDescr"].grab_focus
     else
+      descr = @gui["txtDescr"].text.to_s.strip
+      
       task = @gui["cbTask"].sel
       if !task.is_a?(Knj::Datarow)
         task_id = 0
@@ -500,11 +511,20 @@ class Openall_time_applet::Gui::Win_main
         task_id = task.id
       end
       
-      @timelog = @args[:oata].ob.add(:Timelog, {
-        :task_id => task_id,
-        :descr => @gui["txtDescr"].text
+      timelog = @args[:oata].ob.get_by(:Timelog, {
+        "task_id" => task_id,
+        "descr_lower" => descr,
+        "timestamp_day" => Time.now
       })
-      @args[:oata].timelog_active = @timelog
+      
+      if !timelog
+        timelog = @args[:oata].ob.add(:Timelog, {
+          :task_id => task_id,
+          :descr => descr
+        })
+      end
+      
+      @args[:oata].timelog_active = timelog
       @gui["txtDescr"].text = ""
       @gui["cbTask"].sel = _("Choose:")
     end
