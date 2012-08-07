@@ -112,7 +112,7 @@ class Openall_time_applet::Gui::Win_main
       :model_class => :Timelog,
       :renderers => init_data[:renderers],
       :change_before => proc{|d|
-        if d[:col_no] == 3 and @args[:oata].timelog_active and @args[:oata].timelog_active.id == d[:model].id
+        if d[:col_no] == 2 and @args[:oata].timelog_active and @args[:oata].timelog_active.id == d[:model].id
           raise _("You cannot edit the time for the active timelog.")
         end
         
@@ -171,7 +171,7 @@ class Openall_time_applet::Gui::Win_main
     
     
     #Connect certain column renderers to the editingStarted-method, so editing can be canceled, if the user tries to edit forbidden data on the active timelog.
-    init_data[:renderers][3].signal_connect_after("editing-started", :time, &self.method(:on_cell_editingStarted))
+    init_data[:renderers][2].signal_connect_after("editing-started", :time, &self.method(:on_cell_editingStarted))
     
     
     #Fills the timelogs-treeview with data.
@@ -667,7 +667,7 @@ class Openall_time_applet::Gui::Win_main
       #Update time tracked.
       if timelog_id == act_timelog_id
         secs = act_timelog.time_total + @args[:oata].timelog_active_time_tracked
-        iter[3] = "<b>#{Knj::Strings.secs_to_human_time_str(secs, :secs => false)}</b>"
+        iter[2] = "<b>#{Knj::Strings.secs_to_human_time_str(secs, :secs => false)}</b>"
         bold = true
       end
       
