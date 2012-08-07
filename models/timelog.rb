@@ -22,6 +22,7 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
     d.data[:time] = 0 if d.data[:time].to_s.strip.length <= 0
     d.data[:time_transport] = 0 if d.data[:time_transport].to_s.strip.length <= 0
     d.data[:parent_timelog_id] = 0 if !d.data.key?(:parent_timelog_id)
+    d.data[:sync_need] = 1 if !d.data.key?(:sync_need)
   end
   
   #Pushes timelogs and time to OpenAll.
@@ -102,12 +103,12 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
   
   #Returns the time as a human readable format.
   def time_as_human
-    return Knj::Strings.secs_to_human_time_str(self.time_total)
+    return Knj::Strings.secs_to_human_time_str(self.time_total, :secs => false)
   end
   
   #Returns the transport-time as a human readable format.
   def time_transport_as_human
-    return Knj::Strings.secs_to_human_time_str(self.time_total(:transport => true))
+    return Knj::Strings.secs_to_human_time_str(self.time_total(:transport => true), :secs => false)
   end
   
   def delete_empty_children

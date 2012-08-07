@@ -27,20 +27,20 @@ class Openall_time_applet::Gui::Win_worktime_overview
     
     @gui["labWeek"].label = sprintf(_("Week %s"), date.time.strftime("%W"))
     
-    @args[:oata].ob.list(:Worktime, {"timestamp_week" => date}) do |wt|
+    @args[:oata].ob.list(:Worktime, "timestamp_week" => date) do |wt|
       task = wt.task
       date = wt.timestamp
       
       stats[:task_total][task.id] = {:secs => 0} if !stats[:task_total].key?(task.id)
       stats[:task_total][task.id][:secs] += wt[:worktime].to_i
       
-      stats[:days_total][date.date] = {:secs => 0, :tasks => {}} if !stats[:days_total].key?(date.date)
-      stats[:days_total][date.date][:secs] += wt[:worktime].to_i
-      stats[:days_total][date.date][:tasks][task.id] = task
+      stats[:days_total][date.day] = {:secs => 0, :tasks => {}} if !stats[:days_total].key?(date.day)
+      stats[:days_total][date.day][:secs] += wt[:worktime].to_i
+      stats[:days_total][date.day][:tasks][task.id] = task
       
       #Generate first worktime of that date.
-      if !stats[:days_total][date.date].key?(:first_time) or stats[:days_total][date.date][:first_time].to_i > wt.timestamp.to_i
-        stats[:days_total][date.date][:first_time] = wt.timestamp
+      if !stats[:days_total][date.day].key?(:first_time) or stats[:days_total][date.day][:first_time].to_i > wt.timestamp.to_i
+        stats[:days_total][date.day][:first_time] = wt.timestamp
       end
       
       stats[:week_total] += wt[:worktime].to_i

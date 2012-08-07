@@ -47,58 +47,62 @@ class Openall_time_applet::Gui::Win_main
     init_data = @gui["tvTimelogs"].init([
       _("ID"),
       {
-        :title => _("Description"),
-        :type => :string,
-        :markup => true
-      },
-      {
         :title => _("Timestamp"),
         :type => :string,
-        :markup => true
+        :markup => true,
+        :expand => false
       },
       {
         :title => _("Time"),
         :type => :string,
-        :markup => true
+        :markup => true,
+        :expand => false
       },
       {
-        :title => _("Transport"),
+        :title => _("Description"),
+        :type => :string,
+        :markup => true,
+        :expand => true
+      },
+      {
+        :title => _("T-time"),
+        :type => :string,
+        :markup => true,
+        :expand => false
+      },
+      {
+        :title => _("T-km"),
         :type => :string,
         :markup => true
       },
       {
-        :title => _("Length"),
+        :title => _("T-Descr."),
         :type => :string,
-        :markup => true
+        :markup => true,
+        :expand => true
       },
       {
-        :title => _("Descr."),
-        :type => :string,
-        :markup => true
-      },
-      {
-        :title => _("Costs"),
+        :title => _("Cost"),
         :type => :string,
         :markup => true
       },
       {
         :title => _("Fixed"),
-        :type => :toggle
+        :type => :toggle,
+        :expand => false
       },
       {
-        :title => _("Int. work"),
-        :type => :toggle
-      },
-      {
-        :title => _("Sync?"),
-        :type => :toggle
+        :title => _("Internal"),
+        :type => :toggle,
+        :expand => false
       },
       {
         :title => _("Task"),
         :type => :combo,
         :model => task_ls,
         :has_entry => false,
-        :markup => true
+        :markup => true,
+        :expand => true
       }
     ])
     
@@ -124,17 +128,28 @@ class Openall_time_applet::Gui::Win_main
         @tv_editting = nil
       },
       :cols => {
-        1 => :descr,
-        2 => {:col => :timestamp, :type => :datetime},
-        3 => {:col => :time, :type => :time_as_sec},
-        4 => {:col => :time_transport, :type => :time_as_sec},
+        1 => {
+          :col => :timestamp,
+          :value_callback => self.method(:tv_editable_timestamp_callback),
+          :value_set_callback => self.method(:tv_editable_timestamp_set_callback)
+        },
+        2 => {
+          :col => :time,
+          :value_callback => proc{ |data| Knj::Strings.human_time_str_to_secs(data[:value]) },
+          :value_set_callback => proc{ |data| Knj::Strings.secs_to_human_time_str(data[:value], :secs => false) }
+        },
+        3 => :descr,
+        4 => {
+          :col => :time_transport,
+          :value_callback => proc{ |data| Knj::Strings.human_time_str_to_secs(data[:value]) },
+          :value_set_callback => proc{ |data| Knj::Strings.secs_to_human_time_str(data[:value], :secs => false) }
+        },
         5 => {:col => :transportlength, :type => :int},
         6 => {:col => :transportdescription},
         7 => {:col => :transportcosts, :type => :human_number, :decimals => 2},
         8 => {:col => :travelfixed},
         9 => {:col => :workinternal},
-        10 => {:col => :sync_need},
-        11 => {
+        10 => {
           :col => :task_id,
           :value_callback => lambda{|data|
             task = @args[:oata].ob.get_by(:Task, {"title" => data[:value]})
@@ -208,30 +223,39 @@ class Openall_time_applet::Gui::Win_main
     #Initialize timelog treeview.
     init_data = Knj::Gtk2::Tv.init(@gui["tvTimelogsPrepareTransfer"], [
       _("ID"),
-      _("Description"),
+      {
+        :title => _("Description"),
+        :type => :string,
+        :expand => true
+      },
       _("Timestamp"),
       _("Time"),
-      _("Transport"),
-      _("Length"),
-      _("Transport descr."),
-      _("Transport costs"),
+      _("T-time"),
+      _("T-km"),
       {
-        :title => _("Fixed travel"),
+        :title => _("T-Descr."),
+        :type => :string,
+        :expand => true
+      },
+      _("Cost"),
+      {
+        :title => _("Fixed"),
         :type => :toggle
       },
       {
-        :title => _("Int. work"),
+        :title => _("Internal"),
         :type => :toggle
       },
       {
-        :title => _("Sync?"),
+        :title => _("Skip"),
         :type => :toggle
       },
       {
         :title => _("Task"),
         :type => :combo,
         :model => task_ls,
-        :has_entry => false
+        :has_entry => false,
+        :expand => true
       },
       _("Sync time")
     ])
@@ -246,15 +270,27 @@ class Openall_time_applet::Gui::Win_main
       :change_after => proc{ @dont_reload_sync = false; self.update_sync_totals },
       :cols => {
         1 => :descr,
-        2 => {:col => :timestamp, :type => :datetime},
-        3 => {:col => :time, :type => :time_as_sec},
-        4 => {:col => :time_transport, :type => :time_as_sec},
+        2 => {
+          :col => :timestamp,
+          :value_callback => self.method(:tv_editable_timestamp_callback),
+          :value_set_callback => self.method(:tv_editable_timestamp_set_callback)
+        },
+        3 => {
+          :col => :time,
+          :value_callback => proc{ |data| Knj::Strings.human_time_str_to_secs(data[:value]) },
+          :value_set_callback => proc{ |data| Knj::Strings.secs_to_human_time_str(data[:value], :secs => false) }
+        },
+        4 => {
+          :col => :time_transport,
+          :value_callback => proc{ |data| Knj::Strings.human_time_str_to_secs(data[:value]) },
+          :value_set_callback => proc{ |data| Knj::Strings.secs_to_human_time_str(data[:value], :secs => false) }
+        },
         5 => {:col => :transportlength, :type => :int},
         6 => {:col => :transportdescription},
         7 => {:col => :transportcosts, :type => :human_number, :decimals => 2},
         8 => {:col => :travelfixed},
         9 => {:col => :workinternal},
-        10 => {:col => :sync_need},
+        10 => {:col => :sync_need, :type => :toggle_rev},
         11 => {
           :col => :task_id,
           :value_callback => lambda{ |data|
@@ -268,7 +304,11 @@ class Openall_time_applet::Gui::Win_main
           },
           :value_set_callback => proc{ |data| data[:model].task_name }
         },
-        12 => {:col => :time_sync, :type => :time_as_sec}
+        12 => {
+          :col => :time_sync,
+          :value_callback => proc{ |data| Knj::Strings.human_time_str_to_secs(data[:value]) },
+          :value_set_callback => proc{ |data| Knj::Strings.secs_to_human_time_str(data[:value], :secs => false) }
+        }
       }
     )
     @gui["tvTimelogsPrepareTransfer"].columns[0].visible = false
@@ -282,6 +322,33 @@ class Openall_time_applet::Gui::Win_main
     self.timelog_info_trigger
     width = @gui["window"].size[0]
     @gui["window"].resize(width, 1)
+  end
+  
+  def tv_editable_timestamp_callback(data)
+    if match = data[:value].match(/^\s*(\d+)\s*:\s*(\d+)\s*$/)
+      date = Datet.new
+      date.hour = match[1].to_i
+      date.min = match[2].to_i
+      return date
+    elsif match = data[:value].match(/^\s*(\d+)\s*\/\s*(\d+)\s*$/)
+      date = data[:model].timestamp
+      date.day = match[1].to_i
+      date.month = match[2].to_i
+      
+      return date
+    else
+      return Datet.in(data[:value])
+    end
+  end
+  
+  def tv_editable_timestamp_set_callback(data)
+    date = Datet.in(data[:value])
+    
+    if date.strftime("%Y %m %d") == Time.now.strftime("%Y %m %d")
+      return date.strftime("%H:%M")
+    else
+      return date.strftime("%d/%m")
+    end
   end
   
   #Reloads the suggestions for the description-entry-completion.
@@ -306,8 +373,9 @@ class Openall_time_applet::Gui::Win_main
     return nil if @dont_reload_sync or @gui["tvTimelogsPrepareTransfer"].destroyed?
     @gui["tvTimelogsPrepareTransfer"].model.clear
     @timelogs_sync_count = 0
+    tnow_str = Time.now.strftime("%Y %m %d")
     
-    @args[:oata].ob.list(:Timelog, "sync_need" => 1, "task_id_not" => ["", 0], "orderby" => "timestamp") do |timelog|
+    @args[:oata].ob.list(:Timelog, "task_id_not" => ["", 0], "orderby" => "timestamp") do |timelog|
       #Read time and transport from timelog.
       time = timelog[:time].to_i
       transport = timelog[:time_transport].to_i
@@ -329,10 +397,18 @@ class Openall_time_applet::Gui::Win_main
       #Set sync-time on timelog.
       timelog[:time_sync] = count_rounded_time
       
+      tstamp = timelog.timestamp
+      
+      if tstamp.strftime("%Y %m %d") == tnow_str
+        tstamp_str = tstamp.strftime("%H:%M")
+      else
+        tstamp_str = tstamp.strftime("%d/%m")
+      end
+      
       Knj::Gtk2::Tv.append(@gui["tvTimelogsPrepareTransfer"], [
         timelog.id,
         timelog[:descr],
-        timelog.timestamp_str,
+        tstamp_str,
         timelog.time_as_human,
         timelog.time_transport_as_human,
         Knj::Locales.number_out(timelog[:transportlength], 0),
@@ -340,9 +416,9 @@ class Openall_time_applet::Gui::Win_main
         Knj::Locales.number_out(timelog[:transportcosts], 2),
         Knj::Strings.yn_str(timelog[:travelfixed], true, false),
         Knj::Strings.yn_str(timelog[:workinternal], true, false),
-        Knj::Strings.yn_str(timelog[:sync_need], true, false),
+        Knj::Strings.yn_str(timelog[:sync_need], false, true),
         timelog.task_name,
-        Knj::Strings.secs_to_human_time_str(count_rounded_time)
+        Knj::Strings.secs_to_human_time_str(count_rounded_time, :secs => false)
       ])
       @timelogs_sync_count += 1
     end
@@ -375,7 +451,7 @@ class Openall_time_applet::Gui::Win_main
       end
     end
     
-    @gui["labTotal"].markup = "<b>#{_("Total hours:")}</b> #{Knj::Strings.secs_to_human_time_str(total_secs)}"
+    @gui["labTotal"].markup = "<b>#{_("Total hours:")}</b> #{Knj::Strings.secs_to_human_time_str(total_secs, :secs => false)}"
   end
   
   def on_btnCancelPrepareTransfer_clicked
@@ -409,12 +485,22 @@ class Openall_time_applet::Gui::Win_main
     self.reload_descr_completion
     
     return nil if @dont_reload or @gui["tvTimelogs"].destroyed?
+    tnow_str = Time.now.strftime("%Y %m %d")
+    
     @gui["tvTimelogs"].model.clear
     @args[:oata].ob.list(:Timelog, "orderby" => ["task_id", "descr", "timestamp"]) do |timelog|
       begin
         tstamp_str = timelog.timestamp_str
       rescue => e
         tstamp_str = "[#{_("error")}: #{e.message}"
+      end
+      
+      tstamp = timelog.timestamp
+      
+      if tstamp.strftime("%Y %m %d") == tnow_str
+        tstamp_str = tstamp.strftime("%H:%M")
+      else
+        tstamp_str = tstamp.strftime("%d/%m")
       end
       
       @gui["tvTimelogs"].append([
@@ -428,7 +514,6 @@ class Openall_time_applet::Gui::Win_main
         Knj::Locales.number_out(timelog[:transportcosts], 2),
         Knj::Strings.yn_str(timelog[:travelfixed], true, false),
         Knj::Strings.yn_str(timelog[:workinternal], true, false),
-        Knj::Strings.yn_str(timelog[:sync_need], true, false),
         timelog.task_name
       ])
     end
@@ -492,8 +577,8 @@ class Openall_time_applet::Gui::Win_main
   #This method handles the "Timelog info"-frame. Hides, shows and updates the info in it.
   def timelog_info_trigger
     if tlog = @args[:oata].timelog_active
-      time_tracked = Knj::Strings.secs_to_human_time_str(@args[:oata].timelog_active_time_tracked + tlog.time_total)
-      @gui["btnSwitch"].label = time_tracked[0..4]
+      time_tracked = @args[:oata].timelog_active_time_tracked + tlog.time_total
+      @gui["btnSwitch"].label = "#{_("Stop")} #{Knj::Strings.secs_to_human_short_time(time_tracked)}"
     end
   end
   
@@ -539,7 +624,6 @@ class Openall_time_applet::Gui::Win_main
     
     if tlog_act
       but.image = Gtk::Image.new(Gtk::Stock::MEDIA_STOP, Gtk::IconSize::BUTTON)
-      but.label = _("Stop")
       
       @gui["txtDescr"].text = tlog_act[:descr]
       
@@ -583,7 +667,7 @@ class Openall_time_applet::Gui::Win_main
       #Update time tracked.
       if timelog_id == act_timelog_id
         secs = act_timelog.time_total + @args[:oata].timelog_active_time_tracked
-        iter[3] = "<b>#{Knj::Strings.secs_to_human_time_str(secs)}</b>"
+        iter[3] = "<b>#{Knj::Strings.secs_to_human_time_str(secs, :secs => false)}</b>"
         bold = true
       end
       
