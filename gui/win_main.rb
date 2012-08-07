@@ -505,9 +505,9 @@ class Openall_time_applet::Gui::Win_main
       
       @gui["tvTimelogs"].append([
         timelog.id,
-        Knj::Web.html(timelog[:descr]),
         tstamp_str,
         timelog.time_as_human,
+        Knj::Web.html(timelog[:descr]),
         timelog.time_transport_as_human,
         Knj::Locales.number_out(timelog[:transportlength], 0),
         Knj::Web.html(timelog[:transportdescription]),
