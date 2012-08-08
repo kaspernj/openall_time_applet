@@ -142,7 +142,7 @@
                         </child>
                         <child>
                           <object class="GtkComboBox" id="cbTask">
-                            <property name="width_request">145</property>
+                            <property name="width_request">280</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                           </object>

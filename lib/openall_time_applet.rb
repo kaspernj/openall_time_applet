@@ -2,7 +2,7 @@
 require "rubygems"
 
 #For secs-to-human-string (MySQL-format), model-framework, database-framework, options-framework, date-framework and more.
-gems = ["wref", "datet", "http2", "knjrbfw"]
+gems = ["wref", "datet", "http2", "knjrbfw", "gtk2_treeview_settings"]
 gems.each do |gem|
   fpath = "#{File.dirname(__FILE__)}/../../#{gem}/lib/#{gem}.rb"
   if File.exists?(fpath)
@@ -99,9 +99,7 @@ class Openall_time_applet
       :class_pre => "",
       :module => Openall_time_applet::Models
     )
-    @ob.events.connect(:no_name) do |event, classname|
-      _("not set")
-    end
+    @ob.events.connect(:no_name, &self.method(:objects_no_name))
     
     @events = Knj::Event_handler.new
     @events.add_event(:name => :timelog_active_changed)
@@ -113,7 +111,7 @@ class Openall_time_applet
     Kernel.at_exit(&self.method(:destroy))
     
     #Set default-color to "green_casalogic".
-    Knj::Opts.set("tray_text_color", "green_casalogic") if Knj::Opts.get("tray_text_color").to_s.strip.length <= 0
+    Knj::Opts.set("tray_text_color", "green_casalogic") if Knj::Opts.get("tray_text_color").to_s.strip.empty?
     
     #Spawn tray-icon.
     self.spawn_trayicon
@@ -126,6 +124,11 @@ class Openall_time_applet
     
     #Start autosync-timeout.
     self.restart_autosync
+  end
+  
+  #Called when something doesnt have a name to get a replacement-name in the objects-framework.
+  def objects_no_name(event, classname)
+    return _("not set")
   end
   
   #Creates a runfile or sending a command to the running OpenAll-Time-Applet through the Unix-socket.

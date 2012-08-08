@@ -31,13 +31,7 @@ class Openall_time_applet::Gui::Win_main
     @descr_ec.text_column = 0
     @gui["txtDescr"].completion = @descr_ec
     self.reload_descr_completion
-    
-    
-    @descr_ec.signal_connect("match-selected") do |me, model, iter|
-      text = model.get_value(iter, 0)
-      me.entry.text = text
-      true
-    end
+    @descr_ec.signal_connect("match-selected", &self.method(:on_descr_entrycompletion_selected))
     
     
     
@@ -47,7 +41,7 @@ class Openall_time_applet::Gui::Win_main
     init_data = @gui["tvTimelogs"].init([
       _("ID"),
       {
-        :title => _("Timestamp"),
+        :title => _("Times."),
         :type => :string,
         :markup => true,
         :expand => false
@@ -62,7 +56,9 @@ class Openall_time_applet::Gui::Win_main
         :title => _("Description"),
         :type => :string,
         :markup => true,
-        :expand => true
+        :expand => true,
+        :wrap_mode => Pango::WRAP_WORD_CHAR,
+        :wrap_width => 160
       },
       {
         :title => _("T-time"),
@@ -79,7 +75,9 @@ class Openall_time_applet::Gui::Win_main
         :title => _("T-Descr."),
         :type => :string,
         :markup => true,
-        :expand => true
+        :expand => true,
+        :wrap_mode => Pango::WRAP_WORD_CHAR,
+        :wrap_width => 160
       },
       {
         :title => _("Cost"),
@@ -92,7 +90,7 @@ class Openall_time_applet::Gui::Win_main
         :expand => false
       },
       {
-        :title => _("Internal"),
+        :title => _("Int."),
         :type => :toggle,
         :expand => false
       },
@@ -102,9 +100,29 @@ class Openall_time_applet::Gui::Win_main
         :model => task_ls,
         :has_entry => false,
         :markup => true,
-        :expand => true
+        :expand => true,
+        :wrap_mode => Pango::WRAP_WORD_CHAR,
+        :wrap_width => 160
       }
     ])
+    
+    @tv_settings = Gtk2_treeview_settings.new(
+      :id => "win_main_tvTimelogs",
+      :tv => @gui["tvTimelogs"],
+      :col_ids => {
+        0 => :id,
+        1 => :timestamp,
+        2 => :time,
+        3 => :descr,
+        4 => :ttime,
+        5 => :tkm,
+        6 => :tdescr,
+        7 => :cost,
+        8 => :fixed,
+        9 => :int,
+        10 => :task
+      }
+    )
     
     Knj::Gtk2::Tv.editable_text_renderers_to_model(
       :ob => @args[:oata].ob,
@@ -152,7 +170,7 @@ class Openall_time_applet::Gui::Win_main
         10 => {
           :col => :task_id,
           :value_callback => lambda{|data|
-            task = @args[:oata].ob.get_by(:Task, {"title" => data[:value]})
+            task = @args[:oata].ob.get_by(:Task, "title" => data[:value])
             
             if !task
               return 0
@@ -168,6 +186,10 @@ class Openall_time_applet::Gui::Win_main
     
     #The ID column should not be visible (it is only used to identify which timelog the row represents).
     @gui["tvTimelogs"].columns[0].visible = false
+    
+    
+    #Move the columns around to the right order (the way Jacob wanted them).
+    @gui["tvTimelogs"].move_column_after(@gui["tvTimelogs"].columns[10], @gui["tvTimelogs"].columns[3])
     
     
     #Connect certain column renderers to the editingStarted-method, so editing can be canceled, if the user tries to edit forbidden data on the active timelog.
@@ -187,19 +209,11 @@ class Openall_time_applet::Gui::Win_main
     
     
     #Update switch-button when active timelog is changed.
-    @event_timelog_active_changed = @args[:oata].events.connect(:timelog_active_changed) do
-      self.update_switch_button
-      self.check_rows
-      self.timelog_info_trigger
-    end
+    @event_timelog_active_changed = @args[:oata].events.connect(:timelog_active_changed, &self.method(:on_timelog_active_changed))
     
     
     #This timeout controls the updating of the timelog-info-frame and the time-counter for the active timelog in the treeview.
-    @timeout_id = Gtk.timeout_add(1000) do
-      self.check_rows
-      self.timelog_info_trigger
-      true
-    end
+    @timeout_id = Gtk.timeout_add(1000, &self.method(:timeout_update_sec))
     
     
     
@@ -213,7 +227,7 @@ class Openall_time_applet::Gui::Win_main
     iter[1] = 0.to_s
     
     tasks = [_("Choose:")]
-    @args[:oata].ob.list(:Task, {"orderby" => "title"}) do |task|
+    @args[:oata].ob.list(:Task, "orderby" => "title") do |task|
       iter = task_ls.append
       iter[0] = task[:title]
       iter[1] = task.id.to_s
@@ -259,6 +273,29 @@ class Openall_time_applet::Gui::Win_main
       },
       _("Sync time")
     ])
+    
+    @tv_settings_pt = Gtk2_treeview_settings.new(
+      :id => "win_main_tvTimelogsPrepareTransfer",
+      :tv => @gui["tvTimelogsPrepareTransfer"],
+      :col_ids => {
+        0 => :id,
+        1 => :descr,
+        2 => :timestamp,
+        3 => :time,
+        4 => :ttime,
+        5 => :tkm,
+        6 => :tdescr,
+        7 => :cost,
+        8 => :fixed,
+        9 => :internal,
+        10 => :skip,
+        11 => :task,
+        12 => :sync_time
+      }
+    )
+    
+    @gui["tvTimelogsPrepareTransfer"].move_column_after(@gui["tvTimelogsPrepareTransfer"].columns[1], @gui["tvTimelogsPrepareTransfer"].columns[3])
+    @gui["tvTimelogsPrepareTransfer"].move_column_after(@gui["tvTimelogsPrepareTransfer"].columns[11], @gui["tvTimelogsPrepareTransfer"].columns[4])
     
     #Make columns editable.
     Knj::Gtk2::Tv.editable_text_renderers_to_model(
@@ -322,6 +359,30 @@ class Openall_time_applet::Gui::Win_main
     self.timelog_info_trigger
     width = @gui["window"].size[0]
     @gui["window"].resize(width, 1)
+  end
+  
+  #This is called when an item from the description-entry-completion-menu is selected. This method sets the selected text in the description-entry.
+  def on_descr_entrycompletion_selected(me, model, iter)
+    text = model.get_value(iter, 0)
+    me.entry.text = text
+    return true
+  end
+  
+  #This method is called when the active timelog is changed. It calls various events to update the switch-button, update information in treeview and more instantly (instead of waiting for the 1-sec timeout which will seem like a delay).
+  def on_timelog_active_changed(*args)
+    self.update_switch_button
+    self.check_rows
+    self.timelog_info_trigger
+  end
+  
+  #This method is called every second in order to update various information when tracking timelogs (stop-button-time, treeview-time and more).
+  def timeout_update_sec
+    #Update various information in the main treeview (time-counter).
+    self.check_rows
+    self.timelog_info_trigger
+    
+    #Returns true in order to continue calling this method every second.
+    return true
   end
   
   def tv_editable_timestamp_callback(data)
@@ -405,21 +466,21 @@ class Openall_time_applet::Gui::Win_main
         tstamp_str = tstamp.strftime("%d/%m")
       end
       
-      Knj::Gtk2::Tv.append(@gui["tvTimelogsPrepareTransfer"], [
-        timelog.id,
-        timelog[:descr],
-        tstamp_str,
-        timelog.time_as_human,
-        timelog.time_transport_as_human,
-        Knj::Locales.number_out(timelog[:transportlength], 0),
-        timelog.transport_descr_short,
-        Knj::Locales.number_out(timelog[:transportcosts], 2),
-        Knj::Strings.yn_str(timelog[:travelfixed], true, false),
-        Knj::Strings.yn_str(timelog[:workinternal], true, false),
-        Knj::Strings.yn_str(timelog[:sync_need], false, true),
-        timelog.task_name,
-        Knj::Strings.secs_to_human_time_str(count_rounded_time, :secs => false)
-      ])
+      @tv_settings_pt.append(
+        :id => timelog.id,
+        :descr => timelog[:descr],
+        :timestamp => tstamp_str,
+        :time => timelog.time_as_human,
+        :ttime => timelog.time_transport_as_human,
+        :tkm => Knj::Locales.number_out(timelog[:transportlength], 0),
+        :tdescr => timelog.transport_descr_short,
+        :cost => Knj::Locales.number_out(timelog[:transportcosts], 2),
+        :fixed => Knj::Strings.yn_str(timelog[:travelfixed], true, false),
+        :internal => Knj::Strings.yn_str(timelog[:workinternal], true, false),
+        :skip => Knj::Strings.yn_str(timelog[:sync_need], false, true),
+        :task => timelog.task_name,
+        :sync_time => Knj::Strings.secs_to_human_time_str(count_rounded_time, :secs => false)
+      )
       @timelogs_sync_count += 1
     end
   end
@@ -503,19 +564,19 @@ class Openall_time_applet::Gui::Win_main
         tstamp_str = tstamp.strftime("%d/%m")
       end
       
-      @gui["tvTimelogs"].append([
-        timelog.id,
-        tstamp_str,
-        timelog.time_as_human,
-        Knj::Web.html(timelog[:descr]),
-        timelog.time_transport_as_human,
-        Knj::Locales.number_out(timelog[:transportlength], 0),
-        Knj::Web.html(timelog[:transportdescription]),
-        Knj::Locales.number_out(timelog[:transportcosts], 2),
-        Knj::Strings.yn_str(timelog[:travelfixed], true, false),
-        Knj::Strings.yn_str(timelog[:workinternal], true, false),
-        timelog.task_name
-      ])
+      @tv_settings.append(
+        :id => timelog.id,
+        :timestamp => tstamp_str,
+        :time => timelog.time_as_human,
+        :descr => Knj::Web.html(timelog[:descr]),
+        :ttime => timelog.time_transport_as_human,
+        :tkm => Knj::Locales.number_out(timelog[:transportlength], 0),
+        :tdescr => Knj::Web.html(timelog[:transportdescription]),
+        :cost => Knj::Locales.number_out(timelog[:transportcosts], 2),
+        :fixed => Knj::Strings.yn_str(timelog[:travelfixed], true, false),
+        :int => Knj::Strings.yn_str(timelog[:workinternal], true, false),
+        :task => timelog.task_name
+      )
     end
     
     #Reset cache of which rows are set to bold.
@@ -578,7 +639,10 @@ class Openall_time_applet::Gui::Win_main
   def timelog_info_trigger
     if tlog = @args[:oata].timelog_active
       time_tracked = @args[:oata].timelog_active_time_tracked + tlog.time_total
-      @gui["btnSwitch"].label = "#{_("Stop")} #{Knj::Strings.secs_to_human_short_time(time_tracked)}"
+      @gui["btnSwitch"].label = "#{_("Stop")} (#{Knj::Strings.secs_to_human_short_time(time_tracked)})"
+      
+      #Update icon every second while showing main-window, so it looks like stop-button and tray-icon-time is in sync (else tray will only update every 30 sec. which will make it look out of sync, even though it wont be).
+      @args[:oata].ti.update_icon
     end
   end
   
@@ -657,7 +721,7 @@ class Openall_time_applet::Gui::Win_main
       act_timelog_id = nil
     end
     
-    rows_bold = [1, 2, 3, 4, 5, 6, 7, 11]
+    rows_bold = [:timestamp, :time, :descr, :ttime, :tkm, :tdescr, :cost, :task]
     
     @gui["tvTimelogs"].model.each do |model, path, iter|
       timelog_id = model.get_value(iter, 0).to_i
@@ -667,14 +731,16 @@ class Openall_time_applet::Gui::Win_main
       #Update time tracked.
       if timelog_id == act_timelog_id
         secs = act_timelog.time_total + @args[:oata].timelog_active_time_tracked
-        iter[2] = "<b>#{Knj::Strings.secs_to_human_time_str(secs, :secs => false)}</b>"
+        col_no = @tv_settings.col_orig_no_for_id(:time)
+        iter[col_no] = "<b>#{Knj::Strings.secs_to_human_time_str(secs, :secs => false)}</b>"
         bold = true
       end
       
       #Set all columns to bold if not already set.
       if bold and !@bold_rows.key?(iter_id)
         rows_bold.each do |row_no|
-          iter[row_no] = "<b>#{model.get_value(iter, row_no)}</b>"
+          col_no = @tv_settings.col_orig_no_for_id(row_no)
+          iter[col_no] = "<b>#{model.get_value(iter, col_no)}</b>"
         end
         
         @bold_rows[iter_id] = true
@@ -711,7 +777,8 @@ class Openall_time_applet::Gui::Win_main
     added_id = timelog.id.to_i
     
     @gui["tvTimelogs"].model.each do |model, path, iter|
-      timelog_id = model.get_value(iter, 0).to_i
+      col_no = @tv_settings.col_no_for_id(:id)
+      timelog_id = model.get_value(iter, col_no).to_i
       
       if timelog_id == added_id
         col = @gui["tvTimelogs"].columns[1]

@@ -5,6 +5,7 @@ class Openall_time_applet::Gui::Trayicon
   def initialize(args)
     @args = args
     @debug = @args[:oata].debug
+    @mutex_update_icon = Mutex.new
     
     @ti = Gtk::StatusIcon.new
     @ti.signal_connect("popup-menu", &self.method(:on_statusicon_rightclick))
@@ -20,68 +21,63 @@ class Openall_time_applet::Gui::Trayicon
     Knj::Thread.new do
       loop do
         self.update_icon
-        sleep 60
+        sleep 30
       end
     end
   end
   
   #This updates the icon in the system-tray. It draws seconds on the icon, if a timelog is being tracked.
   def update_icon
-    print "Updating icon.\n" if @debug
-    
-    color = Knj::Opts.get("tray_text_color")
-    color = "black" if color.to_s.strip.length <= 0
-    
-    if !@args[:oata].timelog_active
-      @ti.file = "../gfx/icon_time_#{color}.png"
+    @mutex_update_icon.synchronize do
+      print "Updating icon.\n" if @debug
+      
+      color = Knj::Opts.get("tray_text_color")
+      color = "black" if color.to_s.strip.length <= 0
+      
+      if !@args[:oata].timelog_active
+        @ti.file = "../gfx/icon_time_#{color}.png"
+        return nil
+      end
+      
+      #Calculate minutes tracked and generate variables.
+      secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i + @args[:oata].timelog_active.time_total
+      text = Knj::Strings.secs_to_human_short_time(secs, :secs => false)
+      
+      if text.length <= 2
+        padding_left = 9
+      elsif text.length <= 3
+        padding_left = 4
+      elsif text.length <= 4
+        padding_left = 2
+      else
+        padding_left = 0
+      end
+      
+      #Generate image.
+      require "RMagick"
+      canvas = Magick::Image.new(53, 53) do
+        self.background_color = "transparent"
+        self.format = "png"
+      end
+      
+      color = "#a1a80a" if color == "green_casalogic"
+      
+      gc = Magick::Draw.new
+      gc.fill(color)
+      gc.pointsize = 23
+      gc.text(padding_left, 35, text)
+      gc.draw(canvas)
+      
+      tmp_path = "#{Knj::Os.tmpdir}/openall_time_applet_icon.png"
+      canvas.write(tmp_path)
+      canvas.destroy!
+      
+      #Set icon for tray.
+      @ti.file = tmp_path
+      
+      
       return nil
     end
-    
-    #Calculate minutes tracked and generate variables.
-    secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i + @args[:oata].timelog_active.time_total
-    mins = (secs.to_f / 60.0).floor
-    
-    if mins >= 60
-      hours = mins / 60
-      text = "#{Knj::Locales.number_out(hours, 1)}t"
-    else
-      text = "#{Knj::Locales.number_out(mins, 0)}m"
-    end
-    
-    if text.length <= 2
-      padding_left = 9
-    elsif text.length <= 3
-      padding_left = 4
-    elsif text.length <= 4
-      padding_left = 2
-    else
-      padding_left = 0
-    end
-    
-    #Generate image.
-    require "RMagick"
-    canvas = Magick::Image.new(53, 53) do
-      self.background_color = "transparent"
-      self.format = "png"
-    end
-    
-    color = "#a1a80a" if color == "green_casalogic"
-    
-    gc = Magick::Draw.new
-    gc.fill(color)
-    gc.pointsize = 23
-    gc.text(padding_left, 35, text)
-    gc.draw(canvas)
-    
-    tmp_path = "#{Knj::Os.tmpdir}/openall_time_applet_icon.png"
-    canvas.write(tmp_path)
-    canvas.destroy!
-    
-    #Set icon for tray.
-    @ti.file = tmp_path
-    
-    
-    return nil
   end
   
   def on_statusicon_rightclick(tray, button, time)
@@ -96,7 +92,7 @@ class Openall_time_applet::Gui::Trayicon
         secs = Time.now.to_i - @args[:oata].timelog_active_time.to_i + timelog.time_total
         mins = (secs.to_f / 60.0).round(0)
         
-        mi.children[0].markup = "<b>#{_("Stop")}:</b> #{Knj::Web.html(label)}"
+        mi.children[0].markup = "<b>#{_("Stop")} #{Knj::Web.html(label)}</b>"
         mi.signal_connect("activate", &self.method(:on_stopTracking_activate))
       else
         mi = Gtk::MenuItem.new(label)
@@ -112,15 +108,8 @@ class Openall_time_applet::Gui::Trayicon
     
     #Start-menu-item. Opens main-window, expands treeview and calls the plus-button which adds a new timelog and focuses treeview.
     start = Gtk::ImageMenuItem.new(Gtk::Stock::NEW)
-    start.children[0].label = _("New")
-    start.signal_connect(:activate) do
-      #Open main-window and focus it.
-      @args[:oata].show_main
-      
-      #Get main-window-object.
-      win_main = Knj::Gtk2::Window.get("main")
-      win_main.gui["txtDescr"].grab_focus
-    end
+    start.children[0].label = _("Start new")
+    start.signal_connect(:activate, &self.method(:on_startNew_activate))
     
     menu.append(Gtk::SeparatorMenuItem.new)
     menu.append(start)
@@ -132,6 +121,18 @@ class Openall_time_applet::Gui::Trayicon
     menu.popup(nil, nil, button, time) do |menu, x, y|
       @ti.position_menu(menu)
     end
+  end
+  
+  def on_startNew_activate(*args)
+    #Stop tracking current timelog (if tracking).
+    @args[:oata].timelog_stop_tracking
+    
+    #Open main-window and focus it.
+    @args[:oata].show_main
+    
+    #Get main-window-object.
+    win_main = Knj::Gtk2::Window.get("main")
+    win_main.gui["txtDescr"].grab_focus
   end
   
   def on_statusicon_leftclick(*args)
