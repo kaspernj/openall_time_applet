@@ -306,41 +306,7 @@ class Openall_time_applet::Gui::Win_main
       :change_before => proc{ @dont_reload_sync = true },
       :change_after => proc{ @dont_reload_sync = false; self.update_sync_totals },
       :cols => {
-        1 => :descr,
-        2 => {
-          :col => :timestamp,
-          :value_callback => self.method(:tv_editable_timestamp_callback),
-          :value_set_callback => self.method(:tv_editable_timestamp_set_callback)
-        },
-        3 => {
-          :col => :time,
-          :value_callback => proc{ |data| Knj::Strings.human_time_str_to_secs(data[:value]) },
-          :value_set_callback => proc{ |data| Knj::Strings.secs_to_human_time_str(data[:value], :secs => false) }
-        },
-        4 => {
-          :col => :time_transport,
-          :value_callback => proc{ |data| Knj::Strings.human_time_str_to_secs(data[:value]) },
-          :value_set_callback => proc{ |data| Knj::Strings.secs_to_human_time_str(data[:value], :secs => false) }
-        },
-        5 => {:col => :transportlength, :type => :int},
-        6 => {:col => :transportdescription},
-        7 => {:col => :transportcosts, :type => :human_number, :decimals => 2},
-        8 => {:col => :travelfixed},
-        9 => {:col => :workinternal},
         10 => {:col => :sync_need, :type => :toggle_rev},
-        11 => {
-          :col => :task_id,
-          :value_callback => lambda{ |data|
-            task = @args[:oata].ob.get_by(:Task, {"title" => data[:value]})
-            
-            if !task
-              return 0
-            else
-              return task.id
-            end
-          },
-          :value_set_callback => proc{ |data| data[:model].task_name }
-        },
         12 => {
           :col => :time_sync,
           :value_callback => proc{ |data| Knj::Strings.human_time_str_to_secs(data[:value]) },
