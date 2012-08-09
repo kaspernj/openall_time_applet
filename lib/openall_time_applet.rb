@@ -144,7 +144,7 @@ class Openall_time_applet
       end
       
       if cmd
-        print "Executing command through sock: #{cmd}\n"
+        puts "Executing command through sock: #{cmd}"
         
         require "socket"
         UNIXSocket.open(CONFIG[:sock_path]) do |sock|
@@ -160,9 +160,12 @@ class Openall_time_applet
       fp.write(Process.pid)
     end
     
-    Kernel.at_exit do
-      File.unlink(CONFIG[:run_path]) if File.exists?(CONFIG[:run_path]) and File.read(CONFIG[:run_path]).to_i == Process.pid
-    end
+    Kernel.at_exit(&self.method(:unlink_runfile))
+  end
+  
+  #When the Ruby-process exits this method will be called through 'Kernel.at_exit'.
+  def unlink_runfile
+    File.unlink(CONFIG[:run_path]) if File.exists?(CONFIG[:run_path]) and File.read(CONFIG[:run_path]).to_i == Process.pid.to_i
   end
   
   #Requires the heavy Gtk-stuff.

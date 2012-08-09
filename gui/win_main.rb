@@ -41,7 +41,7 @@ class Openall_time_applet::Gui::Win_main
     init_data = @gui["tvTimelogs"].init([
       _("ID"),
       {
-        :title => _("Times."),
+        :title => _("Stamp"),
         :type => :string,
         :markup => true,
         :expand => false
@@ -57,8 +57,7 @@ class Openall_time_applet::Gui::Win_main
         :type => :string,
         :markup => true,
         :expand => true,
-        :wrap_mode => Pango::WRAP_WORD_CHAR,
-        :wrap_width => 160
+        :fixed_width => 160
       },
       {
         :title => _("T-time"),
@@ -76,8 +75,7 @@ class Openall_time_applet::Gui::Win_main
         :type => :string,
         :markup => true,
         :expand => true,
-        :wrap_mode => Pango::WRAP_WORD_CHAR,
-        :wrap_width => 160
+        :fixed_width => 160
       },
       {
         :title => _("Cost"),
@@ -90,7 +88,7 @@ class Openall_time_applet::Gui::Win_main
         :expand => false
       },
       {
-        :title => _("Int."),
+        :title => _("Work"),
         :type => :toggle,
         :expand => false
       },
@@ -101,8 +99,7 @@ class Openall_time_applet::Gui::Win_main
         :has_entry => false,
         :markup => true,
         :expand => true,
-        :wrap_mode => Pango::WRAP_WORD_CHAR,
-        :wrap_width => 160
+        :fixed_width => 160
       }
     ])
     

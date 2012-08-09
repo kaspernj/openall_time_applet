@@ -108,7 +108,7 @@ class Openall_time_applet::Gui::Trayicon
     
     #Start-menu-item. Opens main-window, expands treeview and calls the plus-button which adds a new timelog and focuses treeview.
     start = Gtk::ImageMenuItem.new(Gtk::Stock::NEW)
-    start.children[0].label = _("Start new")
+    start.children[0].label = "#{_("Start new")}..."
     start.signal_connect(:activate, &self.method(:on_startNew_activate))
     
     menu.append(Gtk::SeparatorMenuItem.new)
