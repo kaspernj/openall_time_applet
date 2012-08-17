@@ -74,11 +74,10 @@ class Openall_time_applet
   
   #Initializes config-dir and database.
   def initialize(args = {})
+    Dir.mkdir(CONFIG[:settings_path]) if !File.exists?(CONFIG[:settings_path])
     self.check_runfile_and_cmds
     self.require_gtk2
-    
     @debug = args[:debug]
-    Dir.mkdir(CONFIG[:settings_path]) if !File.exists?(CONFIG[:settings_path])
     
     #Database-connection.
     @db = Knj::Db.new(
