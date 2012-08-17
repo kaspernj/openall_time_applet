@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kasper Johansen"]
-  s.date = %q{2012-08-09}
+  s.date = %q{2012-08-17}
   s.description = %q{Off-line time-tracking for OpenAll with syncing when online.}
   s.email = %q{k@spernj.org}
   s.executables = ["OpenAll Timelogging", "openall_time_applet.rb"]
@@ -76,6 +76,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<rmagick>, [">= 0"])
       s.add_runtime_dependency(%q<datet>, [">= 0"])
       s.add_runtime_dependency(%q<http2>, [">= 0"])
+      s.add_runtime_dependency(%q<gtk2_treeview_settings>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["~> 2.8.0"])
       s.add_development_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_development_dependency(%q<bundler>, [">= 1.0.0"])
@@ -89,6 +90,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rmagick>, [">= 0"])
       s.add_dependency(%q<datet>, [">= 0"])
       s.add_dependency(%q<http2>, [">= 0"])
+      s.add_dependency(%q<gtk2_treeview_settings>, [">= 0"])
       s.add_dependency(%q<rspec>, ["~> 2.8.0"])
       s.add_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_dependency(%q<bundler>, [">= 1.0.0"])
@@ -103,6 +105,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rmagick>, [">= 0"])
     s.add_dependency(%q<datet>, [">= 0"])
     s.add_dependency(%q<http2>, [">= 0"])
+    s.add_dependency(%q<gtk2_treeview_settings>, [">= 0"])
     s.add_dependency(%q<rspec>, ["~> 2.8.0"])
     s.add_dependency(%q<rdoc>, ["~> 3.12"])
     s.add_dependency(%q<bundler>, [">= 1.0.0"])
