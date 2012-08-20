@@ -107,8 +107,8 @@ class Openall_time_applet::Gui::Win_preferences
   
   def on_btnAutoSyncSave_clicked
     interval = @gui["txtAutoSyncInterval"].text
-    if !(Float(interval) rescue false)
-      Knj::Gtk2.msgbox(_("The interval was not numeric."))
+    if !(Float(interval) rescue false) or interval.to_i <= 0
+      Knj::Gtk2.msgbox(_("The interval was not numeric or above zero."))
       return false
     end
     
