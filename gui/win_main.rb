@@ -38,70 +38,78 @@ class Openall_time_applet::Gui::Win_main
     #Add the tasks to the combo-box.
     @gui["cbTask"].init(tasks)
     
-    init_data = @gui["tvTimelogs"].init([
-      _("ID"),
-      {
-        :title => _("Stamp"),
-        :type => :string,
-        :markup => true,
-        :expand => false
-      },
-      {
-        :title => _("Time"),
-        :type => :string,
-        :markup => true,
-        :expand => false
-      },
-      {
-        :title => _("Description"),
-        :type => :string,
-        :markup => true,
-        :expand => true,
-        :fixed_width => 160
-      },
-      {
-        :title => _("T-time"),
-        :type => :string,
-        :markup => true,
-        :expand => false
-      },
-      {
-        :title => _("T-km"),
-        :type => :string,
-        :markup => true
-      },
-      {
-        :title => _("T-Descr."),
-        :type => :string,
-        :markup => true,
-        :expand => true,
-        :fixed_width => 160
-      },
-      {
-        :title => _("Cost"),
-        :type => :string,
-        :markup => true
-      },
-      {
-        :title => _("Fixed"),
-        :type => :toggle,
-        :expand => false
-      },
-      {
-        :title => _("Work"),
-        :type => :toggle,
-        :expand => false
-      },
-      {
-        :title => _("Task"),
-        :type => :combo,
-        :model => task_ls,
-        :has_entry => false,
-        :markup => true,
-        :expand => true,
-        :fixed_width => 160
-      }
-    ])
+    init_data = @gui["tvTimelogs"].init(
+      :type => :treestore,
+      :cols => [
+        _("ID"),
+        {
+          :title => _("Stamp"),
+          :type => :string,
+          :markup => true,
+          :expand => false
+        },
+        {
+          :title => _("Time"),
+          :type => :string,
+          :markup => true,
+          :expand => false
+        },
+        {
+          :title => _("Description"),
+          :type => :string,
+          :markup => true,
+          :expand => true,
+          :fixed_width => 160
+        },
+        {
+          :title => _("T-time"),
+          :type => :string,
+          :markup => true,
+          :expand => false
+        },
+        {
+          :title => _("T-km"),
+          :type => :string,
+          :markup => true
+        },
+        {
+          :title => _("T-Descr."),
+          :type => :string,
+          :markup => true,
+          :expand => true,
+          :fixed_width => 160
+        },
+        {
+          :title => _("Cost"),
+          :type => :string,
+          :markup => true
+        },
+        {
+          :title => _("Fixed"),
+          :type => :toggle,
+          :expand => false
+        },
+        {
+          :title => _("Work"),
+          :type => :toggle,
+          :expand => false
+        },
+        {
+          :title => _("Task"),
+          :type => :combo,
+          :model => task_ls,
+          :has_entry => false,
+          :markup => true,
+          :expand => true,
+          :fixed_width => 160
+        },
+        {
+          :title => _("Track"),
+          :type => :toggle,
+          :expand => false
+        }
+      ]
+    )
     
     @tv_settings = Gtk2_treeview_settings.new(
       :id => "win_main_tvTimelogs",
@@ -117,7 +125,8 @@ class Openall_time_applet::Gui::Win_main
         7 => :cost,
         8 => :fixed,
         9 => :int,
-        10 => :task
+        10 => :task,
+        11 => :track
       }
     )
     
@@ -176,6 +185,22 @@ class Openall_time_applet::Gui::Win_main
             end
           },
           :value_set_callback => proc{|data| data[:model].task_name }
+        },
+        11 => {
+          :value_callback => lambda{|data|
+            if !data[:model]
+              Knj::Gtk2.msgbox(_("You cannot track a date. Please track a timelog instead."))
+              return false
+            else
+              if data[:value]
+                @args[:oata].timelog_active = data[:model]
+              elsif data[:model] == @args[:oata].timelog_active
+                @args[:oata].timelog_stop_tracking
+              end
+              
+              return data[:model] == @args[:oata].timelog_active
+            end
+          }
         }
       }
     )
@@ -199,6 +224,7 @@ class Openall_time_applet::Gui::Win_main
     
     #Reload the treeview if something happened to a timelog.
     @reload_id = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["add", "update", "delete"], &self.method(:reload_timelogs))
+    @reload_id_update = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["update"], &self.method(:on_timelog_update))
     
     
     #Update switch-button.
@@ -348,31 +374,19 @@ class Openall_time_applet::Gui::Win_main
     return true
   end
   
+  #This is called when updating a timelogs timestamp through the treeview.
   def tv_editable_timestamp_callback(data)
-    if match = data[:value].match(/^\s*(\d+)\s*:\s*(\d+)\s*$/)
-      date = Datet.new
-      date.hour = match[1].to_i
-      date.min = match[2].to_i
-      return date
-    elsif match = data[:value].match(/^\s*(\d+)\s*\/\s*(\d+)\s*$/)
-      date = data[:model].timestamp
-      date.day = match[1].to_i
-      date.month = match[2].to_i
-      
-      return date
-    else
-      return Datet.in(data[:value])
+    begin
+      return data[:model].timestamp.update_from_str(data[:value])
+    rescue => e
+      Knj::Gtk2.msgbox(e.message)
+      return data[:model].timestamp
     end
   end
   
+  #This is called when a timelogs timestamp should be shown.
   def tv_editable_timestamp_set_callback(data)
-    date = Datet.in(data[:value])
-    
-    if date.strftime("%Y %m %d") == Time.now.strftime("%Y %m %d")
-      return date.strftime("%H:%M")
-    else
-      return date.strftime("%d/%m")
-    end
+    return Datet.in(data[:value]).strftime("%H:%M")
   end
   
   #Reloads the suggestions for the description-entry-completion.
@@ -510,8 +524,36 @@ class Openall_time_applet::Gui::Win_main
     
     return nil if @dont_reload or @gui["tvTimelogs"].destroyed?
     tnow_str = Time.now.strftime("%Y %m %d")
-    
     @gui["tvTimelogs"].model.clear
+    
+    #Create date-parent elements that the timelogs will be appended under.
+    dates = {}
+    now_year = Time.now.year
+    
+    @args[:oata].ob.list(:Timelog, "orderby" => "timestamp") do |tlog|
+      tstamp = Datet.in(tlog[:timestamp])
+      str = tstamp.out(:time => false)
+      
+      if !dates.key?(str)
+        tstamp_year = tstamp.year
+        
+        if tstamp_year != now_year
+          date_str = str
+        else
+          date_str = tstamp.out(:time => false, :year => false)
+        end
+        
+        iter = @tv_settings.tv.model.append(nil)
+        iter[1] = "<b>#{Knj::Web.html(date_str)}</b>"
+        
+        dates[str] = {
+          :iter => iter,
+          :tlogs => []
+        }
+      end
+    end
+    
+    #Append the timelogs to the parent dates.
     @args[:oata].ob.list(:Timelog, "orderby" => ["task_id", "descr", "timestamp"]) do |timelog|
       begin
         tstamp_str = timelog.timestamp_str
@@ -520,32 +562,118 @@ class Openall_time_applet::Gui::Win_main
       end
       
       tstamp = timelog.timestamp
+      tstamp_str = tstamp.strftime("%H:%M")
       
-      if tstamp.strftime("%Y %m %d") == tnow_str
-        tstamp_str = tstamp.strftime("%H:%M")
-      else
-        tstamp_str = tstamp.strftime("%d/%m")
-      end
+      parent = dates[tstamp.out(:time => false)][:iter]
       
-      @tv_settings.append(
-        :id => timelog.id,
-        :timestamp => tstamp_str,
-        :time => timelog.time_as_human,
-        :descr => Knj::Web.html(timelog[:descr]),
-        :ttime => timelog.time_transport_as_human,
-        :tkm => Knj::Locales.number_out(timelog[:transportlength], 0),
-        :tdescr => Knj::Web.html(timelog[:transportdescription]),
-        :cost => Knj::Locales.number_out(timelog[:transportcosts], 2),
-        :fixed => Knj::Strings.yn_str(timelog[:travelfixed], true, false),
-        :int => Knj::Strings.yn_str(timelog[:workinternal], true, false),
-        :task => timelog.task_name
+      @tv_settings.append_adv(
+        :parent => parent,
+        :data => {
+          :id => timelog.id,
+          :timestamp => tstamp_str,
+          :time => timelog.time_as_human,
+          :descr => Knj::Web.html(timelog[:descr]),
+          :ttime => timelog.time_transport_as_human,
+          :tkm => Knj::Locales.number_out(timelog[:transportlength], 0),
+          :tdescr => Knj::Web.html(timelog[:transportdescription]),
+          :cost => Knj::Locales.number_out(timelog[:transportcosts], 2),
+          :fixed => Knj::Strings.yn_str(timelog[:travelfixed], true, false),
+          :int => Knj::Strings.yn_str(timelog[:workinternal], true, false),
+          :task => timelog.task_name
+        }
       )
     end
+    
+    #Make all dates expand their content (timelogs).
+    @gui["tvTimelogs"].expand_all
     
     #Reset cache of which rows are set to bold.
     @bold_rows = {}
   end
   
+  def timelog_tv_data_by_timelog(timelog)
+    @gui["tvTimelogs"].model.each do |model, path, iter|
+      timelog_i_id = iter[0].to_i
+      
+      if timelog.id.to_i == timelog_i_id
+        return {
+          :timelog => timelog,
+          :iter => iter,
+          :path => path
+        }
+      end
+    end
+    
+    raise sprintf(_("Could not find timelog in treeview: '%s'."), timelog.id)
+  end
+  
+  def date_tv_data_by_datet(datet, args = nil)
+    datet_str = datet.out(:time => false)
+    add_after = nil
+    
+    @gui["tvTimelogs"].model.each do |model, path, iter|
+      #Skip the iter's that are timelogs (we look for a parent-date).
+      timelog_id = iter[0].to_i
+      next if timelog_id != 0
+      
+      date_i_str = Php4r.strip_tags(iter[1])
+      
+      if date_i_str == datet_str
+        return {
+          :iter => iter,
+          :path => path
+        }
+      end
+      
+      datet_i = Datet.in(date_i_str)
+      
+      if datet_i < datet
+        add_after = iter
+      end
+    end
+    
+    if args and args[:add]
+      iter = @gui["tvTimelogs"].insert_after(nil, add_after)
+      iter[1] = "<b>#{Knj::Web.html(datet.out(:time => false))}</b>"
+      
+      return {
+        :iter => iter
+      }
+    end
+    
+    raise sprintf(_("Could not find iter from that date: '%s'."), datet)
+  end
+  
+  #This method is called every time a timelog is updated (changed). This is needed to move timelogs around under the right dates, when the date is changed for a timelog.
+  def on_timelog_update(timelog)
+    #Get the treeview-data for the selected timelog.
+    tlog_data = self.timelog_tv_data_by_timelog(timelog)
+    
+    #Get the date from the parent treeview-iter.
+    parent_iter = tlog_data[:iter].parent
+    parent_date = Php4r.strip_tags(parent_iter[1])
+    
+    #Get the date from the selected timelog.
+    tlog_date_str = timelog.timestamp.out(:time => false)
+    
+    #The date of the timelog has been updated, and the timelog has to be moved elsewhere in the treeview.
+    if parent_date != tlog_date_str
+      #Wait 5 miliseconds so the 'dont_reload' variable wont be 'true' any more.
+      Gtk.timeout_add(5) do
+        #Reload timelogs to make the changed timelog appear under the right date.
+        self.reload_timelogs
+        
+        #Re-select the timelog in the treeview.
+        tlog_data = self.timelog_tv_data_by_timelog(timelog)
+        @gui["tvTimelogs"].selection.select_iter(tlog_data[:iter])
+        
+        #Return false for the timeout, so it wont be called again.
+        false
+      end
+    end
+  end
+  
+  #Called when the quit-menu-item is activated.
   def on_imiQuit_activate
     #Check if a timelog needs to be synced. If so the user needs to confirm he really wants to quit.
     timelog_found = nil
@@ -578,6 +706,7 @@ class Openall_time_applet::Gui::Win_main
   def on_window_destroy
     #Unconnect reload-event. Else it will crash on call to destroyed object. Also frees up various ressources.
     @args[:oata].ob.unconnect("object" => :Timelog, "conn_id" => @reload_id)
+    @args[:oata].ob.unconnect("object" => :Timelog, "conn_id" => @reload_id_update)
     @args[:oata].ob.unconnect("object" => :Timelog, "conn_id" => @reload_preparetransfer_id)
     
     @args[:oata].events.disconnect(:timelog_active_changed, @event_timelog_active_changed) if @event_timelog_active_changed
