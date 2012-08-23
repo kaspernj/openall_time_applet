@@ -14,7 +14,6 @@ gems.each do |gem|
   end
 end
 
-
 require "sqlite3"
 require "gettext"
 require "base64"
@@ -23,7 +22,7 @@ require "base64"
 class Openall_time_applet
   #Shortcut to start the application. Used by the Ubuntu-package.
   def self.exec
-    require "#{File.dirname(__FILE__)}/../bin/openall_time_applet"
+    require "#{File.dirname(__FILE__)}/../bin/openall_time_applet.rb"
   end
   
   #Subclass controlling autoloading of models.

@@ -3,7 +3,7 @@
 Dir.chdir(File.dirname(__FILE__))
 require "../lib/openall_time_applet.rb"
 
-GetText.bindtextdomain("default", "../locales", ENV["LANGUAGE"])
+GetText.bindtextdomain("default", "../locales", Knj::Locales.lang["full"])
 
 oata = Openall_time_applet.new(:debug => true)
 
