@@ -8,6 +8,8 @@ class Openall_time_applet::Gui::Trayicon
     @mutex_update_icon = Mutex.new
     
     @ti = Gtk::StatusIcon.new
+    @ti.icon_name = "OpenAll Timelogging"
+    @ti.tooltip = "OpenAll Timelogging"
     @ti.signal_connect("popup-menu", &self.method(:on_statusicon_rightclick))
     @ti.signal_connect("activate", &self.method(:on_statusicon_leftclick))
     self.update_icon
