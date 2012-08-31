@@ -14,13 +14,13 @@ class Openall_time_applet::Models::Task < Knj::Datarow
     end
     
     res.each do |task_data|
-      task = self.ob.get_by(:Task, {"openall_uid" => task_data["uid"]})
+      task = self.ob.get_by(:Task, "openall_uid" => task_data["uid"])
       data_hash = {
         :openall_uid => task_data["uid"],
         :title => task_data["title"]
       }
       
-      org = self.ob.get_by(:Organisation, {"openall_uid" => task_data["organisation_uid"]})
+      org = self.ob.get_by(:Organisation, "openall_uid" => task_data["organisation_uid"])
       data_hash[:organisation_id] = org.id if org
       
       if task

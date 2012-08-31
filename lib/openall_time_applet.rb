@@ -2,7 +2,7 @@
 require "rubygems"
 
 #For secs-to-human-string (MySQL-format), model-framework, database-framework, options-framework, date-framework and more.
-gems = ["wref", "datet", "http2", "knjrbfw", "gtk2_treeview_settings"]
+gems = ["wref", "datet", "http2", "knjrbfw", "gtk2_expander_settings", "gtk2_treeview_settings", "gtk2_window_settings"]
 gems.each do |gem|
   fpath = "#{File.dirname(__FILE__)}/../../#{gem}/lib/#{gem}.rb"
   if File.exists?(fpath)
@@ -220,16 +220,19 @@ class Openall_time_applet
   # oata.oa_conn do |conn|
   #   task_list = conn.task_list
   # end
-  def oa_conn
+  def oa_conn(args = nil)
     begin
-      conn = Openall_time_applet::Connection.new(
+      args_conn = {
         :oata => self,
         :host => Knj::Opts.get("openall_host"),
         :port => Knj::Opts.get("openall_port"),
         :username => Knj::Opts.get("openall_username"),
         :password => Base64.strict_decode64(Knj::Opts.get("openall_password")),
         :ssl => Knj::Strings.yn_str(Knj::Opts.get("openall_ssl"), true, false)
-      )
+      }
+      args_conn.merge!(args) if args
+      
+      conn = Openall_time_applet::Connection.new(args_conn)
       yield(conn)
     ensure
       conn.destroy if conn

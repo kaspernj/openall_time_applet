@@ -77,8 +77,16 @@ class Openall_time_applet::Gui::Win_preferences
     #Do the stuff in thread so GUI wont lock.
     Knj::Thread.new do
       begin
+        args_oa_conn = {
+          :host => @gui["txtHost"].text,
+          :port => @gui["txtPort"].text.to_i,
+          :ssl => @gui["cbSSL"].active?,
+          :username => @gui["txtUsername"].text,
+          :password => @gui["txtPassword"].text
+        }
+        
         #Connect to OpenAll, log in, get a list of tasks to test the information and connection.
-        @args[:oata].oa_conn do |conn|
+        @args[:oata].oa_conn(args_oa_conn) do |conn|
           ws.percent = 0.3
           ws.label = _("Getting task-list.")
           task_list = conn.task_list

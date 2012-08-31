@@ -8,6 +8,8 @@ class Openall_time_applet::Gui::Win_main
     @gui.translate
     @gui.connect_signals{|h| method(h)}
     @gui["window"].icon = "#{File.dirname(__FILE__)}/../gfx/icon_time_black.png"
+    Gtk2_window_settings.new(:window => @gui["window"], :name => "main_window", :db => @args[:oata].db)
+    Gtk2_expander_settings.new(:expander => @gui["expOverview"], :name => "main_expander", :db => @args[:oata].db)
     
     
     #Generate list-store containing tasks for the task-column.
@@ -112,7 +114,6 @@ class Openall_time_applet::Gui::Win_main
     )
     
     @tv_settings = Gtk2_treeview_settings.new(
-      :id => "win_main_tvTimelogs",
       :tv => @gui["tvTimelogs"],
       :col_ids => {
         0 => :id,
@@ -214,6 +215,11 @@ class Openall_time_applet::Gui::Win_main
     @gui["tvTimelogs"].move_column_after(@gui["tvTimelogs"].columns[10], @gui["tvTimelogs"].columns[3])
     
     
+    #When a new row is selected, is should be evaluated if the minus-button should be active or not.
+    @gui["tvTimelogs"].selection.signal_connect("changed", &self.method(:validate_minus_active))
+    self.validate_minus_active
+    
+    
     #Connect certain column renderers to the editingStarted-method, so editing can be canceled, if the user tries to edit forbidden data on the active timelog.
     init_data[:renderers][2].signal_connect_after("editing-started", :time, &self.method(:on_cell_editingStarted))
     
@@ -265,7 +271,7 @@ class Openall_time_applet::Gui::Win_main
         :type => :string,
         :expand => true
       },
-      _("Timestamp"),
+      _("Stamp"),
       _("Time"),
       _("T-time"),
       _("T-km"),
@@ -280,7 +286,7 @@ class Openall_time_applet::Gui::Win_main
         :type => :toggle
       },
       {
-        :title => _("Internal"),
+        :title => _("Work"),
         :type => :toggle
       },
       {
@@ -826,6 +832,9 @@ class Openall_time_applet::Gui::Win_main
         col_no = @tv_settings.col_orig_no_for_id(:time)
         iter[col_no] = "<b>#{Knj::Strings.secs_to_human_time_str(secs, :secs => false)}</b>"
         bold = true
+        
+        col_no_track = @tv_settings.col_orig_no_for_id(:track)
+        iter[col_no_track] = 1
       end
       
       #Set all columns to bold if not already set.
@@ -892,6 +901,17 @@ class Openall_time_applet::Gui::Win_main
       @args[:oata].sync_real
     rescue => e
       Knj::Gtk2.msgbox(Knj::Errors.error_str(e))
+    end
+  end
+  
+  #Enables or disables the minus-button based on what is selected in the treeview.
+  def validate_minus_active(*args)
+    sel = @gui["tvTimelogs"].sel
+    
+    if sel and sel[0].to_i > 0
+      @gui["btnMinus"].sensitive = true
+    else
+      @gui["btnMinus"].sensitive = false
     end
   end
 end
