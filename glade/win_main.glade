@@ -264,11 +264,12 @@
                                 <property name="layout_style">start</property>
                                 <child>
                                   <object class="GtkButton" id="btnPlus">
-                                    <property name="label" translatable="yes">+</property>
+                                    <property name="label" translatable="yes">_+</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="use_action_appearance">False</property>
+                                    <property name="use_underline">True</property>
                                     <signal name="clicked" handler="on_btnPlus_clicked" swapped="no"/>
                                   </object>
                                   <packing>
@@ -279,11 +280,12 @@
                                 </child>
                                 <child>
                                   <object class="GtkButton" id="btnMinus">
-                                    <property name="label" translatable="yes">-</property>
+                                    <property name="label" translatable="yes">_-</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="use_action_appearance">False</property>
+                                    <property name="use_underline">True</property>
                                     <signal name="clicked" handler="on_btnMinus_clicked" swapped="no"/>
                                   </object>
                                   <packing>
