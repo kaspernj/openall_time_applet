@@ -60,7 +60,7 @@ class Openall_time_applet
   end
   
   #Various readable variables.
-  attr_reader :db, :debug, :events, :ob, :ti, :timelog_active, :timelog_active_time
+  attr_reader :db, :debug, :events, :log, :ob, :ti, :timelog_active, :timelog_active_time
   attr_accessor :reminder_next
   
   #Config controlling paths and more.
@@ -68,17 +68,25 @@ class Openall_time_applet
     :settings_path => "#{Knj::Os.homedir}/.openall_time_applet",
     :run_path => "#{Knj::Os.homedir}/.openall_time_applet/run",
     :db_path => "#{Knj::Os.homedir}/.openall_time_applet/openall_time_applet.sqlite3",
-    :sock_path => "#{Knj::Os.homedir}/.openall_time_applet/sock"
+    :sock_path => "#{Knj::Os.homedir}/.openall_time_applet/sock",
+    :log_path => "#{Knj::Os.homedir}/.openall_time_applet/log"
   }
   
   #Initializes config-dir and database.
   def initialize(args = {})
+    #Spawn logging-object.
+    require "logger"
+    @log = Logger.new(CONFIG[:log_path])
+    @log.level = Logger::DEBUG
+    
+    
     Dir.mkdir(CONFIG[:settings_path]) if !File.exists?(CONFIG[:settings_path])
     self.check_runfile_and_cmds
     self.require_gtk2
     @debug = args[:debug]
     
     #Database-connection.
+    @log.debug("Spawning database-object.")
     @db = Knj::Db.new(
       :type => "sqlite3",
       :path => CONFIG[:db_path],
@@ -87,9 +95,11 @@ class Openall_time_applet
     )
     
     #Update to latest db-revision.
+    @log.debug("Updating database.")
     self.update_db
     
     #Models-handeler.
+    @log.debug("Spawning model-handler.")
     @ob = Knj::Objects.new(
       :datarow => true,
       :db => @db,
@@ -98,11 +108,14 @@ class Openall_time_applet
       :module => Openall_time_applet::Models
     )
     @ob.events.connect(:no_name, &self.method(:objects_no_name))
+    @ob.connect("object" => :Timelog, "signals" => ["delete_before"], &self.method(:on_timelog_delete))
     
+    @log.debug("Spawning event-handler.")
     @events = Knj::Event_handler.new
     @events.add_event(:name => :timelog_active_changed)
     
     #Options used to save various information (Openall-username and such).
+    @log.debug("Spawning options-object.")
     Knj::Opts.init("knjdb" => @db, "table" => "Option")
     
     #Set crash-operation to save tracked time instead of loosing it.
@@ -112,16 +125,31 @@ class Openall_time_applet
     Knj::Opts.set("tray_text_color", "green_casalogic") if Knj::Opts.get("tray_text_color").to_s.strip.empty?
     
     #Spawn tray-icon.
+    @log.debug("Spawning tray-icon.")
     self.spawn_trayicon
     
     #Start reminder.
+    @log.debug("Starting reminder.")
     self.reminding
     
     #Start unix-socket that listens for remote control.
+    @log.debug("Spawning UNIX-socket.")
     @unix_socket = Openall_time_applet::Unix_socket.new(:oata => self)
     
     #Start autosync-timeout.
+    @log.debug("Starting auto-sync.")
     self.restart_autosync
+    
+    @log.debug("OpenAll Time Applet started.")
+  end
+  
+  #Called when a timelog is deleted.
+  def on_timelog_delete(timelog)
+    #Stop tracking if the active timelog is being deleted.
+    if @timelog_active and @timelog_active.id.to_i == timelog.id.to_i
+      @log.debug("Tracked timelog is being deleted - stopping tracking before deletion.")
+      self.timelog_stop_tracking
+    end
   end
   
   #Called when something doesnt have a name to get a replacement-name in the objects-framework.
@@ -212,6 +240,7 @@ class Openall_time_applet
   #This executes the notification that notifies if a timelog is being tracked.
   def reminding_exec
     return nil unless @timelog_active
+    @log.debug("Sending reminder through notify.")
     Knj::Notify.send("time" => 5, "msg" => sprintf(_("Tracking task: %s"), @timelog_active[:descr]))
   end
   
@@ -246,6 +275,7 @@ class Openall_time_applet
   end
   
   def show_main
+    @log.debug("Show main window.")
     Knj::Gtk2::Window.unique!("main") do
       Openall_time_applet::Gui::Win_main.new(:oata => self)
     end
@@ -253,18 +283,21 @@ class Openall_time_applet
   
   #Spawns the preference-window.
   def show_preferences
+    @log.debug("Show preferences.")
     Knj::Gtk2::Window.unique!("preferences") do
       Openall_time_applet::Gui::Win_preferences.new(:oata => self)
     end
   end
   
   def show_overview
+    @log.debug("Show overview.")
     Knj::Gtk2::Window.unique!("overview") do
       Openall_time_applet::Gui::Win_overview.new(:oata => self)
     end
   end
   
   def show_worktime_overview
+    @log.debug("Show worktime-overview.")
     Knj::Gtk2::Window.unique!("worktime_overview") do
       Openall_time_applet::Gui::Win_worktime_overview.new(:oata => self)
     end
@@ -272,20 +305,24 @@ class Openall_time_applet
   
   #Updates the task-cache.
   def update_task_cache
+    @log.debug("Updating task-cache.")
     @ob.static(:Task, :update_cache, {:oata => self})
   end
   
   #Updates the worktime-cache.
   def update_worktime_cache
+    @log.debug("Updating worktime-cache.")
     @ob.static(:Worktime, :update_cache, {:oata => self})
   end
   
   def update_organisation_cache
+    @log.debug("Updating organisation-cache.")
     @ob.static(:Organisation, :update_cache, {:oata => self})
   end
   
   #Pushes time-updates to OpenAll.
   def push_time_updates
+    @log.debug("Pushing timelogs.")
     @ob.static(:Timelog, :push_time_updates, {:oata => self})
   end
   
@@ -354,6 +391,7 @@ class Openall_time_applet
   #Stops tracking a timelog. Saves time tracked and sets sync-flag.
   def timelog_stop_tracking
     if @timelog_active
+      @log.debug("Stopping tracking of timelog.")
       secs_passed = Time.now.to_i - @timelog_active_time.to_i
       
       @timelog_active.update(
@@ -376,6 +414,7 @@ class Openall_time_applet
       "descr" => timelog[:descr],
       "timestamp_day" => Time.now
     })
+    
     if !timelog_use
       timelog_use = @ob.add(:Timelog, {
         :task_id => timelog[:task_id],
@@ -388,6 +427,8 @@ class Openall_time_applet
       })
     end
     
+    @log.debug("Starting tracking of timelog.")
+    
     begin
       self.timelog_stop_tracking
       @timelog_logged_time = @ob.add(:Timelog_logged_time, :timelog_id => timelog_use.id)
@@ -396,6 +437,7 @@ class Openall_time_applet
       
       @events.call(:timelog_active_changed)
     rescue => e
+      @log.error("Error while trying to start tracking timelog: '#{e.message}'.\n#{e.backtrace.join("\n")}")
       Knj::Gtk2.msgbox("msg" => Knj::Errors.error_str(e), "type" => "warning", "title" => _("Error"), "run" => false)
     end
     
@@ -464,6 +506,7 @@ class Openall_time_applet
   
   #Prints status to the command line and the statusbar in the main window (if the main window is open).
   def status=(newstatus)
+    @log.debug("New status: '#{newstatus}'.")
     puts "Status: '#{newstatus}'."
     win_main = Knj::Gtk2::Window.get("main")
     

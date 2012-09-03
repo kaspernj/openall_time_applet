@@ -23,6 +23,7 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
     d.data[:time_transport] = 0 if d.data[:time_transport].to_s.strip.length <= 0
     d.data[:parent_timelog_id] = 0 if !d.data.key?(:parent_timelog_id)
     d.data[:sync_need] = 1 if !d.data.key?(:sync_need)
+    d.data[:task_id] = 0 if !d.data.key?(:task_id)
   end
   
   #Pushes timelogs and time to OpenAll.

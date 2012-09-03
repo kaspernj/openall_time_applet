@@ -3,6 +3,7 @@ class Openall_time_applet::Gui::Win_main
   
   def initialize(args)
     @args = args
+    @log = @args[:oata].log
     
     @gui = Gtk::Builder.new.add("#{File.dirname(__FILE__)}/../glade/win_main.glade")
     @gui.translate
@@ -42,6 +43,8 @@ class Openall_time_applet::Gui::Win_main
     
     init_data = @gui["tvTimelogs"].init(
       :type => :treestore,
+      :reorderable => false,
+      :sortable => false,
       :cols => [
         _("ID"),
         {
@@ -92,7 +95,7 @@ class Openall_time_applet::Gui::Win_main
           :expand => false
         },
         {
-          :title => _("Work"),
+          :title => _("Internal")[0, 3] + ".",
           :type => :toggle,
           :expand => false
         },
@@ -229,7 +232,8 @@ class Openall_time_applet::Gui::Win_main
     
     
     #Reload the treeview if something happened to a timelog.
-    @reload_id = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["add", "update", "delete"], &self.method(:reload_timelogs))
+    @reload_id = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["add", "update"], &self.method(:reload_timelogs))
+    @reload_id_delete = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["delete"], &self.method(:on_timelog_delete))
     @reload_id_update = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["update"], &self.method(:on_timelog_update))
     
     
@@ -286,7 +290,7 @@ class Openall_time_applet::Gui::Win_main
         :type => :toggle
       },
       {
-        :title => _("Work"),
+        :title => _("Internal")[0, 3] + ".",
         :type => :toggle
       },
       {
@@ -345,7 +349,7 @@ class Openall_time_applet::Gui::Win_main
     )
     @gui["tvTimelogsPrepareTransfer"].columns[0].visible = false
     @gui["vboxPrepareTransfer"].hide
-    @reload_preparetransfer_id = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["add", "update", "delete"], &self.method(:reload_timelogs))
+    @reload_preparetransfer_id = @args[:oata].ob.connect("object" => :Timelog, "signals" => ["add", "update"], &self.method(:reload_timelogs_preparetransfer))
     
     
     
@@ -400,13 +404,13 @@ class Openall_time_applet::Gui::Win_main
     added = {}
     @descr_ec.model.clear
     
-    @args[:oata].ob.list(:Worktime, "orderby" => "timestamp") do |worktime|
+    @args[:oata].ob.list(:Worktime, "orderby" => [["timestamp", "desc"]]) do |worktime|
       next if added.key?(worktime[:comment])
       added[worktime[:comment]] = true
       @descr_ec.model.append[0] = worktime[:comment]
     end
     
-    @args[:oata].ob.list(:Timelog, "orderby" => "descr") do |timelog|
+    @args[:oata].ob.list(:Timelog, "orderby" => [["timestamp", "desc"]]) do |timelog|
       next if added.key?(timelog[:descr])
       added[timelog[:descr]] = true
       @descr_ec.model.append[0] = timelog[:descr]
@@ -415,56 +419,62 @@ class Openall_time_applet::Gui::Win_main
   
   def reload_timelogs_preparetransfer
     return nil if @dont_reload_sync or @gui["tvTimelogsPrepareTransfer"].destroyed?
-    @gui["tvTimelogsPrepareTransfer"].model.clear
-    @timelogs_sync_count = 0
-    tnow_str = Time.now.strftime("%Y %m %d")
+    @dont_reload_sync = true
     
-    @args[:oata].ob.list(:Timelog, "task_id_not" => ["", 0], "orderby" => "timestamp") do |timelog|
-      #Read time and transport from timelog.
-      time = timelog[:time].to_i
-      transport = timelog[:time_transport].to_i
+    begin
+      @gui["tvTimelogsPrepareTransfer"].model.clear
+      @timelogs_sync_count = 0
+      tnow_str = Time.now.strftime("%Y %m %d")
       
-      #If transport is logged, then the work if offsite. It should be rounded up by 30 min. Else 15 min. round up.
-      if transport > 0
-        roundup = 1800
-      else
-        roundup = 900
+      @args[:oata].ob.list(:Timelog, "task_id_not" => ["", 0], "orderby" => [["timestamp", "desc"]]) do |timelog|
+        #Read time and transport from timelog.
+        time = timelog[:time].to_i
+        transport = timelog[:time_transport].to_i
+        
+        #If transport is logged, then the work if offsite. It should be rounded up by 30 min. Else 15 min. round up.
+        if transport > 0
+          roundup = 1800
+        else
+          roundup = 900
+        end
+        
+        #Do the actual counting.
+        count_rounded_time = 0
+        loop do
+          break if count_rounded_time >= time
+          count_rounded_time += roundup
+        end
+        
+        #Set sync-time on timelog.
+        timelog[:time_sync] = count_rounded_time
+        
+        tstamp = timelog.timestamp
+        
+        if tstamp.strftime("%Y %m %d") == tnow_str
+          tstamp_str = tstamp.strftime("%H:%M")
+        else
+          tstamp_str = tstamp.strftime("%d/%m")
+        end
+        
+        @tv_settings_pt.append(
+          :id => timelog.id,
+          :descr => timelog[:descr],
+          :timestamp => tstamp_str,
+          :time => timelog.time_as_human,
+          :ttime => timelog.time_transport_as_human,
+          :tkm => Knj::Locales.number_out(timelog[:transportlength], 0),
+          :tdescr => timelog.transport_descr_short,
+          :cost => Knj::Locales.number_out(timelog[:transportcosts], 2),
+          :fixed => Knj::Strings.yn_str(timelog[:travelfixed], true, false),
+          :internal => Knj::Strings.yn_str(timelog[:workinternal], true, false),
+          :skip => Knj::Strings.yn_str(timelog[:sync_need], false, true),
+          :task => timelog.task_name,
+          :sync_time => Knj::Strings.secs_to_human_time_str(count_rounded_time, :secs => false)
+        )
+        @timelogs_sync_count += 1
       end
-      
-      #Do the actual counting.
-      count_rounded_time = 0
-      loop do
-        break if count_rounded_time >= time
-        count_rounded_time += roundup
-      end
-      
-      #Set sync-time on timelog.
-      timelog[:time_sync] = count_rounded_time
-      
-      tstamp = timelog.timestamp
-      
-      if tstamp.strftime("%Y %m %d") == tnow_str
-        tstamp_str = tstamp.strftime("%H:%M")
-      else
-        tstamp_str = tstamp.strftime("%d/%m")
-      end
-      
-      @tv_settings_pt.append(
-        :id => timelog.id,
-        :descr => timelog[:descr],
-        :timestamp => tstamp_str,
-        :time => timelog.time_as_human,
-        :ttime => timelog.time_transport_as_human,
-        :tkm => Knj::Locales.number_out(timelog[:transportlength], 0),
-        :tdescr => timelog.transport_descr_short,
-        :cost => Knj::Locales.number_out(timelog[:transportcosts], 2),
-        :fixed => Knj::Strings.yn_str(timelog[:travelfixed], true, false),
-        :internal => Knj::Strings.yn_str(timelog[:workinternal], true, false),
-        :skip => Knj::Strings.yn_str(timelog[:sync_need], false, true),
-        :task => timelog.task_name,
-        :sync_time => Knj::Strings.secs_to_human_time_str(count_rounded_time, :secs => false)
-      )
-      @timelogs_sync_count += 1
+    ensure
+      @dont_reload_sync = nil
     end
   end
   
@@ -529,6 +539,8 @@ class Openall_time_applet::Gui::Win_main
     self.reload_descr_completion
     
     return nil if @dont_reload or @gui["tvTimelogs"].destroyed?
+    @log.debug("Reloading main treeview.")
+    
     tnow_str = Time.now.strftime("%Y %m %d")
     @gui["tvTimelogs"].model.clear
     
@@ -536,7 +548,7 @@ class Openall_time_applet::Gui::Win_main
     dates = {}
     now_year = Time.now.year
     
-    @args[:oata].ob.list(:Timelog, "orderby" => "timestamp") do |tlog|
+    @args[:oata].ob.list(:Timelog, "orderby" => [["timestamp", "desc"]]) do |tlog|
       tstamp = Datet.in(tlog[:timestamp])
       str = tstamp.out(:time => false)
       
@@ -569,7 +581,6 @@ class Openall_time_applet::Gui::Win_main
       
       tstamp = timelog.timestamp
       tstamp_str = tstamp.strftime("%H:%M")
-      
       parent = dates[tstamp.out(:time => false)][:iter]
       
       @tv_settings.append_adv(
@@ -610,7 +621,7 @@ class Openall_time_applet::Gui::Win_main
       end
     end
     
-    raise sprintf(_("Could not find timelog in treeview: '%s'."), timelog.id)
+    raise Errno::ENOENT, sprintf(_("Could not find timelog in treeview: '%s'."), timelog.id)
   end
   
   def date_tv_data_by_datet(datet, args = nil)
@@ -660,21 +671,54 @@ class Openall_time_applet::Gui::Win_main
     parent_date = Php4r.strip_tags(parent_iter[1])
     
     #Get the date from the selected timelog.
-    tlog_date_str = timelog.timestamp.out(:time => false)
+    tlog_date_str = timelog.timestamp.out(:time => false, :year => false)
     
     #The date of the timelog has been updated, and the timelog has to be moved elsewhere in the treeview.
     if parent_date != tlog_date_str
       #Wait 5 miliseconds so the 'dont_reload' variable wont be 'true' any more.
       Gtk.timeout_add(5) do
+        @log.debug("Timestamps wasnt the same - reload treeview (parent: #{parent_date} vs tlog: #{tlog_date_str}).")
+        
         #Reload timelogs to make the changed timelog appear under the right date.
         self.reload_timelogs
         
         #Re-select the timelog in the treeview.
-        tlog_data = self.timelog_tv_data_by_timelog(timelog)
-        @gui["tvTimelogs"].selection.select_iter(tlog_data[:iter])
+        begin
+          if !timelog.deleted?
+            tlog_data = self.timelog_tv_data_by_timelog(timelog)
+            @gui["tvTimelogs"].selection.select_iter(tlog_data[:iter])
+          end
+        rescue Errno::ENOENT
+          #Ignore - it has been deleted.
+        end
         
         #Return false for the timeout, so it wont be called again.
         false
+      end
+    end
+  end
+  
+  #This method handels events for when a timelog is deleted. It removes the timelog from various treeviews, so it isnt necessary to do a complete reload of them, which takes a lot longer.
+  def on_timelog_delete(timelog)
+    del_id = timelog.id.to_i
+    
+    @gui["tvTimelogs"].model.each do |model, path, iter|
+      timelog_id = model.get_value(iter, 0).to_i
+      next if timelog_id <= 0
+      
+      if timelog_id == del_id
+        model.remove(iter)
+        break
+      end
+    end
+    
+    @gui["tvTimelogsPrepareTransfer"].model.each do |model, path, iter|
+      timelog_id = model.get_value(iter, 0).to_i
+      next if timelog_id <= 0
+      
+      if timelog_id == del_id
+        model.remove(iter)
+        break
       end
     end
   end
@@ -864,6 +908,7 @@ class Openall_time_applet::Gui::Win_main
     
     return nil if Knj::Gtk2.msgbox(_("Do you want to remove this timelog?"), "yesno") != "yes"
     begin
+      @log.debug("Deleting timelog from pressing minus and confirming: '#{tlog.id}'.")
       @args[:oata].ob.delete(tlog)
     rescue => e
       Knj::Gtk2.msgbox(sprintf(_("Could not delete the timelog: %s"), e.message))
@@ -873,6 +918,7 @@ class Openall_time_applet::Gui::Win_main
   def on_btnPlus_clicked
     #Add new timelog to database.
     timelog = @args[:oata].ob.add(:Timelog)
+    @log.debug("Timelog added from pressing plus-button: '#{timelog.to_hash}'.")
     
     #Focus new timelog in treeview and open the in-line-editting for the description.
     added_id = timelog.id.to_i
@@ -882,6 +928,7 @@ class Openall_time_applet::Gui::Win_main
       timelog_id = model.get_value(iter, col_no).to_i
       
       if timelog_id == added_id
+        @log.debug("Setting focus to added timelog.")
         col = @gui["tvTimelogs"].columns[1]
         @gui["tvTimelogs"].set_cursor(path, col, true)
         break
