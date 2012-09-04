@@ -141,6 +141,11 @@ class Openall_time_applet
     self.restart_autosync
     
     @log.debug("OpenAll Time Applet started.")
+    
+    @ob.list(:Task, "title" => "New task") do |task|
+      puts "Deleting test task."
+      @ob.delete(task)
+    end
   end
   
   #Called when a timelog is deleted.

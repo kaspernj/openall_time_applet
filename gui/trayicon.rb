@@ -20,11 +20,9 @@ class Openall_time_applet::Gui::Trayicon
   
   #This methods starts the thread that updates the tray-icon.
   def icon_updater
-    Knj::Thread.new do
-      loop do
-        self.update_icon
-        sleep 30
-      end
+    Gtk.timeout_add(30000) do
+      self.update_icon
+      true
     end
   end
   

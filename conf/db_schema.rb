@@ -22,7 +22,9 @@ Openall_time_applet::DB_SCHEMA = {
         {"name" => "id", "type" => "int", "autoincr" => true, "primarykey" => true},
         {"name" => "openall_uid", "type" => "int"},
         {"name" => "organisation_id", "type" => "int"},
-        {"name" => "title", "type" => "varchar"}
+        {"name" => "title", "type" => "varchar"},
+        {"name" => "status", "type" => "varchar"},
+        {"name" => "active", "type" => "enum", "maxlength" => "'0','1'", "default" => "1"}
       ],
       "indexes" => [
         "openall_uid",

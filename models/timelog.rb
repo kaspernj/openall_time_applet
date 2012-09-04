@@ -15,15 +15,18 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
     #Fix default time-type (SQLite3 doesnt support this).
     self[:timetype] = "normal" if self[:timetype].to_s == ""
     self[:timestamp] = Datet.new.dbstr if self[:timestamp].to_s == ""
+    self[:timetype] = "normal" if self[:timetype].to_s == ""
   end
   
   #Treat data before inserting into database.
   def self.add(d)
+    d.data[:timestamp] = Datet.new if !d.data.key?(:timestmap) or !d.data[:timestamp]
     d.data[:time] = 0 if d.data[:time].to_s.strip.length <= 0
     d.data[:time_transport] = 0 if d.data[:time_transport].to_s.strip.length <= 0
     d.data[:parent_timelog_id] = 0 if !d.data.key?(:parent_timelog_id)
     d.data[:sync_need] = 1 if !d.data.key?(:sync_need)
     d.data[:task_id] = 0 if !d.data.key?(:task_id)
+    d.data[:timetype] = "normal" if !d.data.key?(:timetype)
   end
   
   #Pushes timelogs and time to OpenAll.
@@ -75,6 +78,19 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
     end
   end
   
+  def update(data)
+    data.each do |key, val|
+      case key.to_sym
+        when :timetype
+          if !self.class.time_types.key?(val.to_s)
+            raise sprintf(_("No such time-type: '%s'."), val)
+          end
+      end
+    end
+    
+    super(data)
+  end
+  
   #Returns a short one-line short description.
   def descr_short
     descr = self[:descr].to_s.gsub("\n", " ").gsub(/\s{2,}/, " ")
@@ -121,5 +137,14 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
         self.ob.delete(child_timelog)
       end
     end
+  end
+  
+  #The possible options for time-types that should be shown in various combo-boxes and such.
+  def self.time_types
+    return {
+      "normal" => _("Normal"),
+      "overtime150" => sprintf(_("Overtime %s"), 150),
+      "overtime200" => sprintf(_("Overtime %s"), 200)
+    }
   end
 end
