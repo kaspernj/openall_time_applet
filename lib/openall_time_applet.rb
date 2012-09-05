@@ -142,10 +142,11 @@ class Openall_time_applet
     
     @log.debug("OpenAll Time Applet started.")
     
-    @ob.list(:Task, "title" => "New task") do |task|
-      puts "Deleting test task."
-      @ob.delete(task)
-    end
+    #Used to test when new tasks are created.
+    #@ob.list(:Task, "title" => "New task") do |task|
+    #  puts "Deleting test task."
+    #  @ob.delete(task)
+    #end
   end
   
   #Called when a timelog is deleted.
@@ -165,26 +166,33 @@ class Openall_time_applet
   #Creates a runfile or sending a command to the running OpenAll-Time-Applet through the Unix-socket.
   def check_runfile_and_cmds
     #If run-file exists and the PID within is still running, then send command (if given) and exit.
-    if File.exists?(CONFIG[:run_path]) and Knj::Unix_proc.pid_running?(File.read(CONFIG[:run_path]).to_i)
-      cmd = nil
-      ARGV.each do |val|
-        if match = val.match(/^--cmd=(.+)$/)
-          cmd = match[1]
-          break
-        end
-      end
+    if File.exists?(CONFIG[:run_path]) and Knj::Unix_proc.pid_running?(File.read(CONFIG[:run_path]).to_i) and File.exists?(CONFIG[:sock_path])
+      running = true
       
-      if cmd
-        puts "Executing command through sock: #{cmd}"
-        
+      begin
         require "socket"
         UNIXSocket.open(CONFIG[:sock_path]) do |sock|
-          sock.puts(cmd)
+          cmd = nil
+          ARGV.each do |val|
+            if match = val.match(/^--cmd=(.+)$/)
+              cmd = match[1]
+              break
+            end
+          end
+          
+          if cmd
+            puts "Executing command through sock: #{cmd}"
+            sock.puts(cmd)
+          end
         end
+      rescue Errno::ECONNREFUSED
+        running = false
       end
       
-      puts "Already running"
-      exit
+      if running
+        puts "Already running"
+        exit
+      end
     end
     
     File.open(CONFIG[:run_path], "w") do |fp|

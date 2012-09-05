@@ -34,6 +34,10 @@ class Openall_time_applet::Models::Timelog < Knj::Datarow
     args[:oata].oa_conn do |conn|
       #Go through timelogs that needs syncing and has a task set.
       self.ob.list(:Timelog, "sync_need" => 1, "task_id_not" => ["", 0]) do |timelog|
+        task = timelog.task
+        raise sprintf(_("No task has been set on timelog: '%s'."), timelog.descr_short) if !task
+        raise sprintf(_("Task is closed and the timelog cannot be synced: '%s'."), timelog.descr_short) if task[:status] == "Closed"
+        
         secs_sum = timelog[:time_sync].to_i + timelog[:time_transport].to_i
         next if secs_sum <= 0 or !timelog.task
         

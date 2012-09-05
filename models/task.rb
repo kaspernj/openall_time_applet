@@ -27,7 +27,8 @@ class Openall_time_applet::Models::Task < Knj::Datarow
       data_hash = {
         :openall_uid => task_data["uid"],
         :title => task_data["title"],
-        :status => task_data["status"]
+        :status => task_data["status"],
+        :active => 1
       }
       
       org = self.ob.get_by(:Organisation, "openall_uid" => task_data["organisation_uid"])
