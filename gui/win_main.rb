@@ -9,17 +9,27 @@ class Openall_time_applet::Gui::Win_main
     @ob = @oata.ob
     @log = @oata.log
     
-    
     @gui = Gtk::Builder.new.add("#{File.dirname(__FILE__)}/../glade/win_main.glade")
     @gui.translate
     @gui.connect_signals{|h| method(h)}
-    @gui["window"].icon = "#{File.dirname(__FILE__)}/../gfx/icon_time_black.png"
+    
+    #Shortcut-variables to very used widgets.
+    @window = @gui["window"]
+    @expander = @gui["expOverview"]
+    @tv = @gui["tvTimelogs"]
+    @tvpt = @gui["tvTimelogsPrepareTransfer"]
+    
+    
+    #Set icon for window.
+    @window.icon = "#{File.dirname(__FILE__)}/../gfx/icon_time_black.png"
     
     
     #Settings for various widgets.
-    Gtk2_expander_settings.new(:expander => @gui["expOverview"], :name => "main_expander", :db => @oata.db)
-    Gtk2_window_settings.new(:window => @gui["window"], :name => "main_window", :db => @oata.db)
+    Gtk2_expander_settings.new(:expander => @expander, :name => "main_expander", :db => @oata.db)
+    Gtk2_window_settings.new(:window => @window, :name => "main_window", :db => @oata.db)
     
+    #Trigger max. height stuff.
+    self.on_expOverview_activate(@expander)
     
     #Generate list-store containing tasks for the task-column.
     @task_ls = Gtk::ListStore.new(String, String)
@@ -60,7 +70,7 @@ class Openall_time_applet::Gui::Win_main
     
     
     
-    init_data = @gui["tvTimelogs"].init(
+    init_data = @tv.init(
       :type => :treestore,
       :reorderable => false,
       :sortable => false,
@@ -144,7 +154,7 @@ class Openall_time_applet::Gui::Win_main
     )
     
     @tv_settings = Gtk2_treeview_settings.new(
-      :tv => @gui["tvTimelogs"],
+      :tv => @tv,
       :col_ids => {
         0 => :id,
         1 => :timestamp,
@@ -164,7 +174,7 @@ class Openall_time_applet::Gui::Win_main
     
     Knj::Gtk2::Tv.editable_text_renderers_to_model(
       :ob => @oata.ob,
-      :tv => @gui["tvTimelogs"],
+      :tv => @tv,
       :model_class => :Timelog,
       :renderers => init_data[:renderers],
       :change_before => proc{|d|
@@ -250,15 +260,19 @@ class Openall_time_applet::Gui::Win_main
     
     
     #The ID column should not be visible (it is only used to identify which timelog the row represents).
-    @gui["tvTimelogs"].columns[0].visible = false
+    @tv.columns[0].visible = false
     
     
     #Move the columns around to the right order (the way Jacob wanted them).
-    @gui["tvTimelogs"].move_column_after(@gui["tvTimelogs"].columns[10], @gui["tvTimelogs"].columns[3])
+    @tv.move_column_after(@tv.columns[10], @tv.columns[3])
+    @tv.move_column_after(@tv.columns[11], @tv.columns[3])
+    @tv.move_column_after(@tv.columns[11], @tv.columns[5])
+    @tv.move_column_after(@tv.columns[9], @tv.columns[6])
+    @tv.move_column_after(@tv.columns[11], @tv.columns[8])
     
     
     #When a new row is selected, is should be evaluated if the minus-button should be active or not.
-    @gui["tvTimelogs"].selection.signal_connect("changed", &self.method(:validate_minus_active))
+    @tv.selection.signal_connect("changed", &self.method(:validate_minus_active))
     self.validate_minus_active
     
     
@@ -291,7 +305,10 @@ class Openall_time_applet::Gui::Win_main
     
     
     #Initializes sync-box.
-    @gui["btnSyncPrepareTransfer"].label = _("Transfer")
+    lab_transfer = _("Transfer")
+    lab_transfer = "#{lab_transfer[0, 1]}_#{lab_transfer[1, 99]}" #For 'r'-shortcut.
+    @gui["btnSyncPrepareTransfer"].label = lab_transfer
+    
     
     #Generate list-store containing tasks for the task-column.
     @task_ls = Gtk::ListStore.new(String, String)
@@ -308,7 +325,7 @@ class Openall_time_applet::Gui::Win_main
     end
     
     #Initialize timelog treeview.
-    init_data = Knj::Gtk2::Tv.init(@gui["tvTimelogsPrepareTransfer"], [
+    init_data = Knj::Gtk2::Tv.init(@tvpt, [
       _("ID"),
       {
         :title => _("Description"),
@@ -349,7 +366,7 @@ class Openall_time_applet::Gui::Win_main
     
     @tv_settings_pt = Gtk2_treeview_settings.new(
       :id => "win_main_tvTimelogsPrepareTransfer",
-      :tv => @gui["tvTimelogsPrepareTransfer"],
+      :tv => @tvpt,
       :col_ids => {
         0 => :id,
         1 => :descr,
@@ -367,13 +384,16 @@ class Openall_time_applet::Gui::Win_main
       }
     )
     
-    @gui["tvTimelogsPrepareTransfer"].move_column_after(@gui["tvTimelogsPrepareTransfer"].columns[1], @gui["tvTimelogsPrepareTransfer"].columns[3])
-    @gui["tvTimelogsPrepareTransfer"].move_column_after(@gui["tvTimelogsPrepareTransfer"].columns[11], @gui["tvTimelogsPrepareTransfer"].columns[4])
+    @tvpt.move_column_after(@tvpt.columns[1], @tvpt.columns[3])
+    @tvpt.move_column_after(@tvpt.columns[11], @tvpt.columns[3])
+    @tvpt.move_column_after(@tvpt.columns[9], @tvpt.columns[4])
+    @tvpt.move_column_after(@tvpt.columns[10], @tvpt.columns[5])
+    @tvpt.move_column_after(@tvpt.columns[9], @tvpt.columns[6])
     
     #Make columns editable.
     Knj::Gtk2::Tv.editable_text_renderers_to_model(
       :ob => @oata.ob,
-      :tv => @gui["tvTimelogsPrepareTransfer"],
+      :tv => @tvpt,
       :model_class => :Timelog,
       :renderers => init_data[:renderers],
       :change_before => proc{ @dont_reload_sync = true },
@@ -387,17 +407,41 @@ class Openall_time_applet::Gui::Win_main
         }
       }
     )
-    @gui["tvTimelogsPrepareTransfer"].columns[0].visible = false
+    @tvpt.columns[0].visible = false
     @gui["vboxPrepareTransfer"].hide
     @reload_preparetransfer_id = @ob.connect("object" => :Timelog, "signals" => ["add", "update"], &self.method(:reload_timelogs_preparetransfer))
     
     
     
     #Show the window.
-    @gui["window"].show
+    @window.show
     self.timelog_info_trigger
-    width = @gui["window"].size[0]
-    @gui["window"].resize(width, 1)
+    width = @window.size[0]
+    @window.resize(width, 1)
+  end
+  
+  def window_resize_height_disable
+    hints = Gdk::Geometry.new
+    
+    hints.min_width = 1
+    hints.max_width = 9999
+    
+    hints.min_height = 1
+    hints.max_height = 1
+    
+    @window.set_geometry_hints(@expander, hints, Gdk::Window::HINT_MAX_SIZE)
+  end
+  
+  def window_resize_height_enable
+    hints = Gdk::Geometry.new
+    
+    hints.min_width = 1
+    hints.max_width = 9999
+    
+    hints.min_height = 1
+    hints.max_height = 9999
+    
+    @window.set_geometry_hints(@expander, hints, Gdk::Window::HINT_MAX_SIZE)
   end
   
   def task_ls_resort
@@ -496,11 +540,11 @@ class Openall_time_applet::Gui::Win_main
   end
   
   def reload_timelogs_preparetransfer
-    return nil if @dont_reload_sync or @gui["tvTimelogsPrepareTransfer"].destroyed?
+    return nil if @dont_reload_sync or @tvpt.destroyed?
     @dont_reload_sync = true
     
     begin
-      @gui["tvTimelogsPrepareTransfer"].model.clear
+      @tvpt.model.clear
       @timelogs_sync_count = 0
       tnow_str = Time.now.strftime("%Y %m %d")
       
@@ -564,7 +608,7 @@ class Openall_time_applet::Gui::Win_main
       Knj::Gtk2.msgbox("msg" => _("There is nothing to sync at this time."), "run" => false)
     else
       #...else show the window.
-      @gui["expOverview"].hide
+      @expander.hide
       self.update_sync_totals
       @gui["vboxPrepareTransfer"].show
     end
@@ -573,13 +617,18 @@ class Openall_time_applet::Gui::Win_main
   def update_sync_totals
     total_secs = 0
     
-    @gui["tvTimelogsPrepareTransfer"].model.each do |model, path, iter|
-      time_val = @gui["tvTimelogsPrepareTransfer"].model.get_value(iter, 12)
+    @tvpt.model.each do |model, path, iter|
+      time_val = @tvpt.model.get_value(iter, 12)
       
-      begin
-        total_secs += Knj::Strings.human_time_str_to_secs(time_val)
-      rescue
-        #ignore - user is properly entering stuff.
+      col_no_skip = @tv_settings_pt.col_orig_no_for_id(:skip)
+      skip_val = @tvpt.model.get_value(iter, col_no_skip)
+      
+      if skip_val != 1
+        begin
+          total_secs += Knj::Strings.human_time_str_to_secs(time_val)
+        rescue
+          #ignore - user is properly entering stuff.
+        end
       end
     end
     
@@ -587,14 +636,14 @@ class Openall_time_applet::Gui::Win_main
   end
   
   def on_btnCancelPrepareTransfer_clicked
-    @gui["expOverview"].show
+    @expander.show
     @gui["vboxPrepareTransfer"].hide
   end
   
   #This method is called, when editting starts in a description-, time- or task-cell. If it is the active timelog, then editting is canceled.
   def on_cell_editingStarted(renderer, editable, path, col_title)
-    iter = @gui["tvTimelogs"].model.get_iter(path)
-    timelog_id = @gui["tvTimelogs"].model.get_value(iter, 0).to_i
+    iter = @tv.model.get_iter(path)
+    timelog_id = @tv.model.get_value(iter, 0).to_i
     
     if tlog = @oata.timelog_active and tlog.id.to_i == timelog_id
       renderer.stop_editing(true)
@@ -616,11 +665,11 @@ class Openall_time_applet::Gui::Win_main
   def reload_timelogs
     self.reload_descr_completion
     
-    return nil if @dont_reload or @gui["tvTimelogs"].destroyed?
+    return nil if @dont_reload or @tv.destroyed?
     @log.debug("Reloading main treeview.")
     
     tnow_str = Time.now.strftime("%Y %m %d")
-    @gui["tvTimelogs"].model.clear
+    @tv.model.clear
     
     #Create date-parent elements that the timelogs will be appended under.
     dates = {}
@@ -674,7 +723,7 @@ class Openall_time_applet::Gui::Win_main
           :descr => Knj::Web.html(timelog[:descr]),
           :ttime => timelog.time_transport_as_human,
           :tkm => Knj::Locales.number_out(timelog[:transportlength], 0),
-          :ttype => timelog[:timetype],
+          :ttype => @time_types[timelog[:timetype]],
           :tdescr => Knj::Web.html(timelog[:transportdescription]),
           :cost => Knj::Locales.number_out(timelog[:transportcosts], 2),
           :fixed => Knj::Strings.yn_str(timelog[:travelfixed], true, false),
@@ -685,14 +734,14 @@ class Openall_time_applet::Gui::Win_main
     end
     
     #Make all dates expand their content (timelogs).
-    @gui["tvTimelogs"].expand_all
+    @tv.expand_all
     
     #Reset cache of which rows are set to bold.
     @bold_rows = {}
   end
   
   def timelog_tv_data_by_timelog(timelog)
-    @gui["tvTimelogs"].model.each do |model, path, iter|
+    @tv.model.each do |model, path, iter|
       timelog_i_id = iter[0].to_i
       
       if timelog.id.to_i == timelog_i_id
@@ -711,7 +760,7 @@ class Openall_time_applet::Gui::Win_main
     datet_str = datet.out(:time => false)
     add_after = nil
     
-    @gui["tvTimelogs"].model.each do |model, path, iter|
+    @tv.model.each do |model, path, iter|
       #Skip the iter's that are timelogs (we look for a parent-date).
       timelog_id = iter[0].to_i
       next if timelog_id != 0
@@ -733,7 +782,7 @@ class Openall_time_applet::Gui::Win_main
     end
     
     if args and args[:add]
-      iter = @gui["tvTimelogs"].insert_after(nil, add_after)
+      iter = @tv.insert_after(nil, add_after)
       iter[1] = "<b>#{Knj::Web.html(datet.out(:time => false))}</b>"
       
       return {
@@ -769,7 +818,7 @@ class Openall_time_applet::Gui::Win_main
         begin
           if !timelog.deleted?
             tlog_data = self.timelog_tv_data_by_timelog(timelog)
-            @gui["tvTimelogs"].selection.select_iter(tlog_data[:iter])
+            @tv.selection.select_iter(tlog_data[:iter])
           end
         rescue Errno::ENOENT
           #Ignore - it has been deleted.
@@ -785,7 +834,7 @@ class Openall_time_applet::Gui::Win_main
   def on_timelog_delete(timelog)
     del_id = timelog.id.to_i
     
-    @gui["tvTimelogs"].model.each do |model, path, iter|
+    @tv.model.each do |model, path, iter|
       timelog_id = model.get_value(iter, 0).to_i
       next if timelog_id <= 0
       
@@ -795,7 +844,7 @@ class Openall_time_applet::Gui::Win_main
       end
     end
     
-    @gui["tvTimelogsPrepareTransfer"].model.each do |model, path, iter|
+    @tvpt.model.each do |model, path, iter|
       timelog_id = model.get_value(iter, 0).to_i
       next if timelog_id <= 0
       
@@ -848,17 +897,14 @@ class Openall_time_applet::Gui::Win_main
   
   def on_expOverview_activate(expander)
     if expander.expanded?
-      @log.debug("Current window-size: #{@gui["window"].size}")
-      size = @gui["window"].size
-      @gui["window"].resize(size[0], 480) if size[1] < 480
+      self.window_resize_height_enable
+      @log.debug("Current window-size: #{@window.size}")
+      size = @window.size
+      @window.resize(size[0], 480) if size[1] < 480
       self.timelog_info_trigger
     else
-      Gtk.timeout_add(200) do
-        @log.debug("Resizing to minimum.")
-        self.timelog_info_trigger
-        @gui["window"].resize(@gui["window"].size[0], 1)
-        false
-      end
+      self.window_resize_height_disable
+      self.timelog_info_trigger
     end
   end
   
@@ -950,7 +996,7 @@ class Openall_time_applet::Gui::Win_main
     
     col_no_track = @tv_settings.col_orig_no_for_id(:track)
     
-    @gui["tvTimelogs"].model.each do |model, path, iter|
+    @tv.model.each do |model, path, iter|
       timelog_id = model.get_value(iter, 0).to_i
       bold = false
       
@@ -995,11 +1041,11 @@ class Openall_time_applet::Gui::Win_main
   end
   
   def on_miSyncStatic_activate
-    @oata.sync_static("transient_for" => @gui["window"])
+    @oata.sync_static("transient_for" => @window)
   end
   
   def on_btnMinus_clicked
-    sel = @gui["tvTimelogs"].sel
+    sel = @tv.sel
     tlog = @ob.get(:Timelog, sel[0]) if sel
     
     if !sel or !tlog
@@ -1024,14 +1070,14 @@ class Openall_time_applet::Gui::Win_main
     #Focus new timelog in treeview and open the in-line-editting for the description.
     added_id = timelog.id.to_i
     
-    @gui["tvTimelogs"].model.each do |model, path, iter|
+    @tv.model.each do |model, path, iter|
       col_no = @tv_settings.col_no_for_id(:id)
       timelog_id = model.get_value(iter, col_no).to_i
       
       if timelog_id == added_id
         @log.debug("Setting focus to added timelog.")
-        col = @gui["tvTimelogs"].columns[1]
-        @gui["tvTimelogs"].set_cursor(path, col, true)
+        col = @tv.columns[1]
+        @tv.set_cursor(path, col, true)
         break
       end
     end
@@ -1045,7 +1091,7 @@ class Openall_time_applet::Gui::Win_main
   def on_btnSyncPrepareTransfer_clicked
     begin
       #Destroy this window and start syncing for real.
-      @gui["window"].destroy
+      @window.destroy
       @oata.sync_real
     rescue => e
       Knj::Gtk2.msgbox(Knj::Errors.error_str(e))
@@ -1054,7 +1100,7 @@ class Openall_time_applet::Gui::Win_main
   
   #Enables or disables the minus-button based on what is selected in the treeview.
   def validate_minus_active(*args)
-    sel = @gui["tvTimelogs"].sel
+    sel = @tv.sel
     
     if sel and sel[0].to_i > 0
       @gui["btnMinus"].sensitive = true
