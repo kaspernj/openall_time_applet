@@ -89,4 +89,15 @@ class Openall_time_applet::Models::Task < Knj::Datarow
     
     return str
   end
+  
+  def name_html
+    str = Knj::Web.html(self[:title].to_s.strip)
+    str = "[#{_("no name")}]" if str.empty?
+    
+    if org = self.organisation
+      str << " <i>#{Knj::Strings.shorten(org.name, 15)}</i>"
+    end
+    
+    return str
+  end
 end

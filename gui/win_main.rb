@@ -269,6 +269,7 @@ class Openall_time_applet::Gui::Win_main
     @tv.move_column_after(@tv.columns[11], @tv.columns[5])
     @tv.move_column_after(@tv.columns[9], @tv.columns[6])
     @tv.move_column_after(@tv.columns[11], @tv.columns[8])
+    @tv.move_column_after(@tv.columns[12], @tv.columns[0])
     
     
     #When a new row is selected, is should be evaluated if the minus-button should be active or not.
@@ -359,7 +360,8 @@ class Openall_time_applet::Gui::Win_main
         :type => :combo,
         :model => @task_ls,
         :has_entry => false,
-        :expand => true
+        :expand => true,
+        :markup => true
       },
       _("Sync time")
     ])
