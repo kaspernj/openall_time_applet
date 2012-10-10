@@ -74,14 +74,14 @@ class Openall_time_applet
   
   #Initializes config-dir and database.
   def initialize(args = {})
+    Dir.mkdir(CONFIG[:settings_path]) if !File.exists?(CONFIG[:settings_path])
+    self.check_runfile_and_cmds
+    
     #Spawn logging-object.
     require "logger"
     @log = Logger.new(CONFIG[:log_path])
     @log.level = Logger::DEBUG
     
-    
-    Dir.mkdir(CONFIG[:settings_path]) if !File.exists?(CONFIG[:settings_path])
-    self.check_runfile_and_cmds
     self.require_gtk2
     @debug = args[:debug]
     
@@ -143,7 +143,7 @@ class Openall_time_applet
     @log.debug("OpenAll Time Applet started.")
     
     #Used to test when new tasks are created.
-    #@ob.list(:Task, "title" => "New task") do |task|
+    #@ob.list(:Task, "title" => "Test no org") do |task|
     #  puts "Deleting test task."
     #  @ob.delete(task)
     #end
