@@ -2,7 +2,7 @@
 require "rubygems"
 
 #For secs-to-human-string (MySQL-format), model-framework, database-framework, options-framework, date-framework and more.
-gems = ["wref", "datet", "http2", "knjrbfw", "gtk2_expander_settings", "gtk2_treeview_settings", "gtk2_window_settings", "ruby_process", "RMagick"]
+gems = ["wref", "datet", "http2", "knjrbfw", "gtk2_expander_settings", "gtk2_treeview_settings", "gtk2_window_settings", "RMagick"]
 gems.each do |gem|
   fpath = "#{File.dirname(__FILE__)}/../../#{gem}/lib/#{gem}.rb"
   if File.exists?(fpath)
