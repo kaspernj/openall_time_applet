@@ -3,6 +3,7 @@ GEM
   specs:
     atk (1.2.1)
       glib2 (>= 1.2.1)
+    autogc (0.0.3)
     cairo (1.12.3)
       pkg-config
     datet (0.0.21)
@@ -70,6 +71,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  autogc
   bundler (>= 1.0.0)
   datet
   gettext

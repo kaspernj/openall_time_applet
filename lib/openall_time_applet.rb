@@ -2,7 +2,7 @@
 require "rubygems"
 
 #For secs-to-human-string (MySQL-format), model-framework, database-framework, options-framework, date-framework and more.
-gems = ["wref", "datet", "http2", "knjrbfw", "gtk2_expander_settings", "gtk2_treeview_settings", "gtk2_window_settings", "RMagick"]
+gems = ["autogc", "RMagick", "sqlite3", "wref", "datet", "http2", "knjrbfw", "gtk2_expander_settings", "gtk2_treeview_settings", "gtk2_window_settings"]
 gems.each do |gem|
   fpath = "#{File.dirname(__FILE__)}/../../#{gem}/lib/#{gem}.rb"
   if File.exists?(fpath)
@@ -14,9 +14,11 @@ gems.each do |gem|
   end
 end
 
-require "sqlite3"
 require "gettext"
 require "base64"
+
+#This solves a memory corruption problem in Ruby 1.9.3.
+Autogc.enable_for_known_buggy_env(:debug => true)
 
 #The base class of the applet. Spawns all windows, holds subclasses for models and gui, holds models objects and holds database-objects.
 class Openall_time_applet

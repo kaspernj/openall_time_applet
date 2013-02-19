@@ -54,6 +54,8 @@ class Openall_time_applet::Gui::Trayicon
       end
       
       #Generate image.
+      tmp_path = "#{Knj::Os.tmpdir}/openall_time_applet_icon.png"
+      
       canvas = Magick::Image.new(53, 53) do
         self.background_color = "transparent"
         self.format = "png"
@@ -67,36 +69,8 @@ class Openall_time_applet::Gui::Trayicon
       gc.text(padding_left, 35, text)
       gc.draw(canvas)
       
-      tmp_path = "#{Knj::Os.tmpdir}/openall_time_applet_icon.png"
       canvas.write(tmp_path)
       canvas.destroy!
-      
-      
-=begin
-      Ruby_process::Cproxy.run do |data|
-        subproc = data[:subproc]
-        subproc.static("Object", "require", "rubygems")
-        subproc.static("Object", "require", "RMagick")
-        
-        canvas = subproc.new("Magick::Image", 53, 53)
-          puts "Setting bgcolor to transparent."
-          canvas.background_color = "transparent"
-          canvas.format = "png"
-        
-        puts "Wee"
-        
-        color = "#a1a80a" if color == "green_casalogic"
-      
-        gc = subproc.new("Magick::Draw")
-        gc.fill(color)
-        gc.pointsize = 23
-        gc.text(padding_left, 35, text)
-        gc.draw(canvas)
-        
-        canvas.write(tmp_path)
-        canvas.destroy!
-      end
-=end
       
       #Set icon for tray.
       @ti.file = tmp_path
