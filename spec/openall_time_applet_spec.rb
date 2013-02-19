@@ -15,6 +15,8 @@ describe "OpenallTimeApplet" do
     date = Datet.new
     date.days - 1
     
+    timelogs_count_before = $oata.ob.list(:Timelog).to_a.length + 1
+    
     timelog = $oata.ob.add(:Timelog, {
       :descr => "Test 1",
       :timestamp => date
@@ -24,8 +26,8 @@ describe "OpenallTimeApplet" do
     sleep 0.5
     $oata.timelog_stop_tracking
     
-    timelogs = $oata.ob.list(:Timelog, "orderby" => "timestamp").to_a
-    raise "Expected amount of timelogs to be 2 but it wasnt: #{timelogs.length}" if timelogs.length != 2
+    timelogs = $oata.ob.list(:Timelog).to_a
+    raise "Expected amount of timelogs to be #{timelogs_count_before} but it wasnt: #{timelogs.length}" if timelogs.length != timelogs_count_before
     
     cloned = timelogs.last
     raise "Expected date to be today but it wasnt: #{cloned.timestamp}" if cloned.timestamp.time.strftime("%Y-%m-%d") != Time.now.strftime("%Y-%m-%d")
@@ -34,7 +36,7 @@ describe "OpenallTimeApplet" do
     sleep 0.5
     $oata.timelog_stop_tracking
     
-    timelogs = $oata.ob.list(:Timelog, "orderby" => "timestamp").to_a
+    timelogs = $oata.ob.list(:Timelog).to_a
     raise "Expected amount of timelogs to be 2 but it wasnt: #{timelogs.length}" if timelogs.length != 2
     
     #Try to delete a timelog that has a sub-timelog with logged time. It should show an error message-box.

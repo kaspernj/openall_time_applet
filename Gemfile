@@ -13,6 +13,7 @@ gem "http2"
 gem "gtk2_expander_settings"
 gem "gtk2_treeview_settings"
 gem "gtk2_window_settings"
+gem "ruby_process"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

@@ -1,56 +1,59 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    atk (1.1.5)
-      glib2 (>= 1.1.5)
-    cairo (1.12.2)
+    atk (1.2.1)
+      glib2 (>= 1.2.1)
+    cairo (1.12.3)
       pkg-config
-    datet (0.0.20)
+    datet (0.0.21)
     diff-lcs (1.1.3)
-    gdk_pixbuf2 (1.1.5)
-      glib2 (>= 1.1.5)
-    gettext (2.3.2)
+    gdk_pixbuf2 (1.2.1)
+      glib2 (>= 1.2.1)
+    gettext (2.3.7)
+      levenshtein
       locale
     git (1.2.5)
-    glib2 (1.1.5)
+    glib2 (1.2.1)
       pkg-config
-    gtk2 (1.1.5)
-      atk (>= 1.1.5)
-      gdk_pixbuf2 (>= 1.1.5)
-      pango (>= 1.1.5)
+    gtk2 (1.2.1)
+      atk (>= 1.2.1)
+      gdk_pixbuf2 (>= 1.2.1)
+      pango (>= 1.2.1)
     gtk2_expander_settings (0.0.1)
       gtk2
       knjrbfw
-    gtk2_treeview_settings (0.0.2)
+    gtk2_treeview_settings (0.0.3)
       gtk2
+      knjrbfw
     gtk2_window_settings (0.0.5)
       gtk2
       knjrbfw
-    http2 (0.0.10)
+    http2 (0.0.13)
     jeweler (1.8.4)
       bundler (~> 1.0)
       git (>= 1.2.5)
       rake
       rdoc
-    json (1.7.5)
-    knjrbfw (0.0.98)
+    json (1.7.7)
+    knjrbfw (0.0.101)
       datet
       http2
       php4r
       tsafe
       wref
+    levenshtein (0.2.2)
     locale (2.0.8)
-    pango (1.1.5)
+    pango (1.2.1)
       cairo (>= 1.10.0)
-      glib2 (>= 1.1.5)
+      glib2 (>= 1.2.1)
     php4r (0.0.3)
       datet
       http2
     pkg-config (1.1.4)
-    rake (0.9.2.2)
-    rdoc (3.12)
+    rake (10.0.3)
+    rdoc (3.12.1)
       json (~> 1.4)
-    rmagick (2.13.1)
+    rmagick (2.13.2)
     rspec (2.8.0)
       rspec-core (~> 2.8.0)
       rspec-expectations (~> 2.8.0)
@@ -59,7 +62,7 @@ GEM
     rspec-expectations (2.8.0)
       diff-lcs (~> 1.1.2)
     rspec-mocks (2.8.0)
-    sqlite3 (1.3.6)
+    sqlite3 (1.3.7)
     tsafe (0.0.11)
     wref (0.0.5)
 
