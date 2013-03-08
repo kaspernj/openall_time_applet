@@ -6,7 +6,7 @@ GEM
     autogc (0.0.3)
     cairo (1.12.3)
       pkg-config
-    datet (0.0.21)
+    datet (0.0.22)
     diff-lcs (1.1.3)
     gdk_pixbuf2 (1.2.1)
       glib2 (>= 1.2.1)
@@ -20,7 +20,7 @@ GEM
       atk (>= 1.2.1)
       gdk_pixbuf2 (>= 1.2.1)
       pango (>= 1.2.1)
-    gtk2_expander_settings (0.0.1)
+    gtk2_expander_settings (0.0.3)
       gtk2
       knjrbfw
     gtk2_treeview_settings (0.0.3)
@@ -36,10 +36,11 @@ GEM
       rake
       rdoc
     json (1.7.7)
-    knjrbfw (0.0.101)
+    knjrbfw (0.0.103)
       datet
       http2
       php4r
+      ruby_process
       tsafe
       wref
     levenshtein (0.2.2)
@@ -52,7 +53,7 @@ GEM
       http2
     pkg-config (1.1.4)
     rake (10.0.3)
-    rdoc (3.12.1)
+    rdoc (3.12.2)
       json (~> 1.4)
     rmagick (2.13.2)
     rspec (2.8.0)
@@ -63,6 +64,9 @@ GEM
     rspec-expectations (2.8.0)
       diff-lcs (~> 1.1.2)
     rspec-mocks (2.8.0)
+    ruby_process (0.0.8)
+      tsafe
+      wref
     sqlite3 (1.3.7)
     tsafe (0.0.11)
     wref (0.0.5)

@@ -3,17 +3,19 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 gem "knjrbfw"
-gem "gtk2"
-gem "sqlite3"
-gem "gettext"
-gem "json"
-gem "rmagick"
 gem "datet"
 gem "http2"
 gem "gtk2_expander_settings"
 gem "gtk2_treeview_settings"
 gem "gtk2_window_settings"
 gem "autogc"
+
+#These gems can be installed as dist packages.
+gem "gtk2", :require => false
+gem "sqlite3", :require => false
+gem "gettext", :require => false
+gem "json", :require => false
+gem "rmagick", :require => false
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
